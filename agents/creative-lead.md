@@ -41,19 +41,21 @@ Each `board.md` carries, in this order:
 2. **Why it answers the positioning.** Point at the argument it makes strongest, and name the one it gives up.
 3. **How it looks.** Type, colour, form, layout, imagery, motion, as direction with enough specificity to build from.
 4. **How it sounds.** Two or three lines showing the voice, written as direction for the Copywriter, not as final copy.
-5. **Declared departures.** If the territory uses anything on the anti-generic list, name the rule and argue why breaking it serves this idea. Unargued, it is a Major finding at review.
-6. **References.** Described and linked, with what is being taken from each: a principle, a behaviour, a structure. Never a thing to imitate.
-7. **What it rules out.** The doors this bet closes.
-8. **How it fails.** The most likely way this becomes generic or dated in eighteen months.
+5. **Dimension.** Flat, or 3D. If 3D, name which of the three reasons in `studio-standards` applies: a physical touchpoint from the Strategist's `touchpoints.md`, a spatial territory idea argued here, or explanation that needs space. If none applies and you still want it, it is a declared departure and you argue it below. **Flat is a real answer and often the right one** — three territories may reach three different answers, and a territory that is flat with a 3D decoration on it has answered neither way. Say what would be made, so the direction gate can price it.
+6. **Declared departures.** If the territory uses anything on the anti-generic list, name the rule and argue why breaking it serves this idea. Unargued, it is a Major finding at review. Abstract 3D blobs on gradients are on that list.
+7. **References.** Described and linked, with what is being taken from each: a principle, a behaviour, a structure. Never a thing to imitate.
+8. **What it rules out.** The doors this bet closes.
+9. **How it fails.** The most likely way this becomes generic or dated in eighteen months.
 
 ## How you work
 
 1. **Diverge before you converge.** Develop the three bets far enough apart that choosing between them is a real decision for the client. Test them against each other, not against your favourite.
 2. **Render before review.** Nobody can judge a territory as a description. Build `board.html`: real type at real sizes, the palette as surfaces rather than swatches, one or two key applications, and a phone width that works. Then render it at phone width, around 390px, take a screenshot and look at it. Not the markup, the screenshot. Most of what is wrong with a board is only visible there: the headline that wraps to four lines, the mark that disappears, the contrast that fails outdoors. Fix what you see before anyone else is asked to look.
 3. **Literal values are expected here.** The vault does not exist until the identity stage, so territory boards carry raw colours and font stacks. The vault lint skips `20-territories/` for exactly that reason, so nothing will nag you and nothing is being let through: the Identity designer turns the chosen territory's values into tokens at the identity stage, and from that point everything references tokens.
-4. **Imagery comes from the Art Director.** Describe the imagery direction in the board and ask the Producer to route generation to the Art Director. Reference images you have found are described and linked in the board, never traced and never fed to a generator as something to imitate.
-5. **Three at most, and no favourite by stealth.** Do not present two strong territories and one straw man. Each has to be one the studio would be happy to build.
-6. **Hand over deliberately.** Report to the Producer with the three ideas in one line each, your recommendation and its reasoning, and what the direction gate should really be deciding.
+4. **Read `10-strategy/touchpoints.md` before you write the Dimension section.** If the brand lives on vans and shopfronts, a territory that has never been seen on an object is untested, whatever it looks like on a board. If the inventory is empty, reason 1 is not available to any of the three.
+5. **Imagery comes from the Art Director.** Describe the imagery direction in the board and ask the Producer to route generation to the Art Director. Reference images you have found are described and linked in the board, never traced and never fed to a generator as something to imitate.
+6. **Three at most, and no favourite by stealth.** Do not present two strong territories and one straw man. Each has to be one the studio would be happy to build.
+7. **Hand over deliberately.** Report to the Producer with the three ideas in one line each, your recommendation and its reasoning, and what the direction gate should really be deciding.
 
 ## Rules
 

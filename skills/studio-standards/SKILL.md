@@ -7,7 +7,7 @@ description: >
   conventions. Every studio agent and every panel lens loads it. Also use it when Tim asks to "check this
   against the studio standards", "is this generic" or "does this meet the bar".
 metadata:
-  version: "0.3.0"
+  version: "0.3.5"
 ---
 
 # Studio standards
@@ -28,6 +28,30 @@ The bar is a studio a client hires because its in-house work is competent but in
 ## Anti-generic list
 
 `references/anti-generic.md` lists the visual and verbal defaults the studio does not ship unless a declared departure argues for them. Check work against it before any gate. The panel's Creative and Craft lenses use it from 0.4.0; until then the Creative Lead and the Producer check against it before every gate.
+
+## When 3D is allowed
+
+3D is the studio's most expensive material and the easiest to reach for. Abstract 3D blobs on gradients are on the anti-generic list for a reason: most 3D in brand work exists because it was available, not because the idea needed space.
+
+**A job may use 3D for one of three reasons, and no others:**
+
+1. **A physical touchpoint.** The brand exists on an object in the world: a van, a sign, a uniform, packaging, a stand, a building. 3D is how the studio sees it before the client pays a signwriter.
+2. **A spatial territory idea, argued on the board.** The territory's idea is itself about depth, material, object or space, and the Creative Lead has argued it in the board's Dimension section. A territory that is flat with a 3D decoration is not this.
+3. **Explanation that needs space.** Something true about the product cannot be shown flat: an assembly, a mechanism, a site, a route.
+
+**Anything else is a declared departure and needs the board to argue it.** "It would look good in 3D" is not an argument, and neither is "the deck needs a hero".
+
+**How it runs through the job:**
+
+| Stage | Who | What |
+|---|---|---|
+| strategy | Strategist | A touchpoint inventory in `10-strategy/`: every place this brand physically exists, or will. It decides whether reason 1 is live before anyone designs. |
+| territories | Creative Lead | A **Dimension** section on every board: flat, or 3D and which of the three reasons, or a declared departure. Three territories may reach three different answers. |
+| direction gate | Producer | The pack states the 3D plan: what will be made in 3D, why, and what it costs. Tim approves the plan, not just the territory. |
+| identity | Identity designer | Blender mockup tests for every physical touchpoint the inventory names, at real viewing distances. A mark that works at 512px on a screen and fails at 25 metres on a van is the identity stage's problem, not the client's. |
+| applications | Builder, Art Director | Build only the 3D the direction gate approved. New 3D at this stage is a change request. |
+
+The `blender-3d` skill does the making. Renders are judged at the distance the object is actually seen from, never at 100% on a monitor.
 
 ## Craft standards
 

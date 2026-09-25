@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.5 (25 Sep 2026)
+
+3D gets a reason before it gets a renderer, and the effect check stops passing quietly.
+
+- **The 3D decision rule** in `studio-standards`. A job may use 3D for a physical touchpoint, a spatial territory idea argued on the board, or explanation that needs space. Anything else is a declared departure, because "it would look good in 3D" is not an argument and abstract 3D blobs on gradients are already on the anti-generic list. It runs through the job rather than sitting in a document: the Strategist writes a touchpoint inventory in `10-strategy/touchpoints.md`, every territory board carries a **Dimension** section naming its answer or declaring a departure, the direction gate pack states the plan and Tim approves it, the Identity designer runs Blender mockups for every physical touchpoint at real viewing distances, and the Builder and Art Director build only what was approved.
+- **`blender-3d` skill and `blenderkit.py`.** Scenes take their material colours from `vault/build/blender.json` and the view transform is forced to Standard, because Blender's default desaturates every brand colour and nobody can say why the renders drifted. Draft and final presets, headless from the command line, `--distances` so an object is judged at the distance it is actually seen from. Every render writes a sidecar recording the scene, preset, samples, view transform, the vault build it drew from and the command, because a render nobody can reproduce is a screenshot. `verify` reads that sidecar back and refuses a render made under the wrong view transform.
+- **"Effect not verified" is now visible.** Where the refinement effect check has no SVG renderer it used to return nothing, which reads as a pass. It now raises a warning that never blocks the gate and is written into the pack above the risks, saying plainly that a person is named and that the pass was **not** checked for having changed anything.
+- 125 tests.
+
 ## 0.3.4 (25 Sep 2026)
 
 Mandatory intake validation, before a word of the brief is drafted.

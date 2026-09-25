@@ -32,7 +32,7 @@ What each gate decides:
 | Gate | Tim decides |
 |---|---|
 | brief | The brief, scope, plan and fee are right to send to the client |
-| direction | Which territory (or flow direction) goes forward, and what to change in it |
+| direction | Which territory (or flow direction) goes forward, what to change in it, and the 3D plan: what gets made in 3D and why |
 | system | The identity system or screen system is right: marks, tokens, type, key applications |
 | governance | Rules, templates and roll-out for a corporate programme |
 | final | Everything in scope is ready for the client and for handover |

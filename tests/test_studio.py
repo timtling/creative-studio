@@ -238,6 +238,48 @@ def test_effect_check_is_silent_without_a_renderer(job, tmp_path, monkeypatch):
     assert [x for x in st.readiness(job, st.load(job), "system") if "30-identity" in x] == []
 
 
+def test_no_renderer_warns_in_the_pack_rather_than_passing_quietly(job, tmp_path, monkeypatch):
+    """A silent pass reads as a verified one, so the gap is said out loud."""
+    monkeypatch.setattr(st, "renderer", lambda: None)
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    _write_mark(job, 1, 10)
+    _write_mark(job, 2, 10)
+    (job / "30-identity" / "refinement-log.md").write_text(
+        "- 2026-10-06 · v2 · refined by: Tim Ling · kerned the wordmark\n")
+
+    assert [x for x in st.readiness(job, st.load(job), "system") if "30-identity" in x] == [], \
+        "a warning must never block the gate"
+    warns = st.gate_warnings(job, st.load(job), "system")
+    assert len(warns) == 1 and warns[0].startswith("effect not verified: no renderer")
+    assert "not** that the pass changed anything" in warns[0]
+
+    validate_intake(job)
+    fill(job / "01-brief.md"); fill(job / "02-scope.md")
+    for g in ("brief", "direction"):
+        st.main(["gate", "raise", g, "--job", str(job), "--force"])
+        st.main(["gate", "record", g, "--status", "approved", "--job", str(job)])
+    assert st.main(["gate", "raise", "system", "--job", str(job)]) == 0
+    pack = (job / "gates" / "system.md").read_text()
+    assert "## Not verified" in pack and "effect not verified: no renderer" in pack
+    assert pack.index("## Not verified") < pack.index("## Trade-offs and risks")
+
+
+def test_a_verified_pass_adds_no_warning(job, tmp_path):
+    if st.renderer() is None:
+        pytest.skip("no SVG renderer on this machine")
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    _write_mark(job, 1, 10)
+    _write_mark(job, 2, 16)
+    (job / "30-identity" / "refinement-log.md").write_text(
+        "- 2026-10-06 · v2 · refined by: Tim Ling · kerned the wordmark\n")
+    assert st.gate_warnings(job, st.load(job), "system") == []
+
+
+def test_warnings_are_only_raised_where_they_mean_something(job):
+    """No refinement log, no claim about effect: the brief gate says nothing."""
+    assert st.gate_warnings(job, st.load(job), "brief") == []
+
+
 def test_identity_check_is_tied_to_the_stage_not_the_gate_name(tmp_path, monkeypatch):
     """product-ui has a system gate too, but it closes screens: no mark, no log needed."""
     monkeypatch.delenv("STUDIO_JOB", raising=False)

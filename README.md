@@ -9,6 +9,7 @@ An independent creative studio run by a team of agents. It takes brand, identity
 | 0.1.0 | Art Director agent; image generation on Recraft and Replicate with a provenance ledger, budget and licence guard rails (parked until needed) |
 | 0.2.0 | Producer workflow: five tracks, job set-up, planning, gates, client revision rounds, feedback triage, change requests, commissions. Studio standards and the anti-generic list. Brand vault: design tokens with validation, contrast checks, CSS, Blender and swatch-page builds, and a lint hook |
 | 0.3.0 | The four creative roles: Strategist, Creative Lead, Copywriter and Identity designer. The Producer now has someone to route every stage of a brand sprint to |
+| 0.3.5 | 3D needs one of three reasons before anyone renders: a physical touchpoint, a spatial territory idea argued on the board, or explanation that needs space. The `blender-3d` skill builds scenes from the vault's own colour values. The system gate says when it could not verify a refinement rather than passing quietly |
 | 0.3.4 | Intake is validated against an eleven-item checklist and at least three answered questions before the brief is drafted; the brief gate refuses to raise without it |
 | 0.3.3 | Builder and Delivery complete the roster, so a sprint runs intake to handover. The `studio-close` skill turns a finished job into an intervention log, a fix list and eval cases. The system gate refuses a person-attributed version that renders identically to the one before it |
 
@@ -23,7 +24,7 @@ Install `dist/creative-studio.plugin` in Claude, then:
 - **Check progress**: "Where are we on heron?"
 - **Commission from the engagement studio**: "Commission the studio for a cover key visual for barbet, NTT DATA brand level B2, due Friday."
 
-Skills: `producer`, `studio-intake`, `studio-gate`, `studio-status`, `studio-close`, `commission`, `studio-standards`, `brand-vault`, `image-generation`. They are named and described so they do not trigger on engagement studio work.
+Skills: `producer`, `studio-intake`, `studio-gate`, `studio-status`, `studio-close`, `commission`, `studio-standards`, `brand-vault`, `image-generation`, `blender-3d`. They are named and described so they do not trigger on engagement studio work.
 
 ## The roster
 
@@ -62,6 +63,7 @@ All standard-library Python, run by the skills:
 - `skills/producer/scripts/studio.py`: `init`, `plan`, `check`, `gate raise|record`, `round`, `feedback`, `cr`, `status`, `set-active`
 - `skills/brand-vault/scripts/vault.py`: `init`, `validate`, `build`, `contrast`, `lint`, `hook-lint`
 - `skills/image-generation/scripts/imagekit.py`: job ledger, budget, capture, contact sheet, provenance
+- `skills/blender-3d/scripts/blenderkit.py`: `presets`, `plan`, `render` (inside Blender), `verify`, `report`
 
 ## Hooks
 
@@ -85,7 +87,7 @@ Only needed when generated imagery comes back into scope.
 ## Development
 
 ```
-python3 -m pytest tests -q     # 105 tests
+python3 -m pytest tests -q     # 125 tests
 tools/package.sh               # runs the tests, builds dist/creative-studio.plugin
 ```
 
@@ -107,6 +109,7 @@ skills/
   studio-standards/    SKILL.md, references/anti-generic.md
   brand-vault/         SKILL.md, scripts/vault.py, assets/tokens.template.json
   image-generation/    SKILL.md, references/, scripts/imagekit.py
+  blender-3d/          SKILL.md, scripts/blenderkit.py
 tests/
 tools/package.sh, tools/mcp.example.json
 ```

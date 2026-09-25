@@ -381,27 +381,63 @@ def version_pairs(job: Path, version: int) -> list[tuple[Path, Path]]:
     return out
 
 
-def refinement_had_effect(job: Path, entries: list[tuple[str, str]]) -> list[str]:
-    """Did the newest person-attributed pass change anything it can be checked against?"""
+def refinement_effect(job: Path, entries: list[tuple[str, str]]) -> tuple[list[str], list[str]]:
+    """(problems, warnings) for the newest person-attributed pass.
+
+    A machine with no SVG renderer cannot tell whether the pass changed anything.
+    That is a gap in what was checked, so it is said out loud in the gate pack
+    rather than passing quietly: a silent pass reads as a verified one.
+    """
     versions = [int(v) for v, who in entries if v and _person_name(who)]
     if not versions:
-        return []
+        return [], []
     v = max(versions)
     if v < 2:
-        return []
+        return [], []
     pairs = version_pairs(job, v)
     if not pairs:
-        return []
+        return [], []
+    if renderer() is None:
+        return [], [f"effect not verified: no renderer. v{v} is attributed to a person, and this machine has no "
+                    f"SVG renderer ({', '.join(n for n, _ in RENDERERS)}), so the studio has checked that a person "
+                    f"is named and **not** that the pass changed anything. Verify it by hand, or run the check "
+                    f"where a renderer is installed."]
     verdicts = [(prev, cur, render_differs(prev, cur)) for prev, cur in pairs]
     known = [d for _, _, d in verdicts if d is not None]
     if not known:
-        return []          # no renderer here: attribution is all this machine can check
+        return [], [f"effect not verified: the renderer could not read v{v} or its predecessor, so the pass has "
+                    "not been compared. Check the files open, or verify the change by hand."]
     if any(known):
-        return []
+        return [], []
     names = ", ".join(cur.name for _, cur, d in verdicts if d is False)
     return [f"30-identity: v{v} is attributed to a person but renders identically to v{v - 1} ({names}). "
             "A pass that changed nothing is not a refinement: check the file was saved with the change in it, "
-            "or log what actually happened."]
+            "or log what actually happened."], []
+
+
+def refinement_had_effect(job: Path, entries: list[tuple[str, str]]) -> list[str]:
+    return refinement_effect(job, entries)[0]
+
+
+def log_entries(job: Path) -> list[tuple[str, str]]:
+    p = job / STAGE_DIRS["identity"] / "refinement-log.md"
+    if not p.exists():
+        return []
+    return [(v, who.strip()) for v, who in REFINED_ENTRY.findall(p.read_text())]
+
+
+def gate_warnings(job: Path, data: dict, gate: str) -> list[str]:
+    """Things the studio could not check, as opposed to things it checked and failed.
+
+    These never block a gate. They go into the pack so Tim is told what was not
+    verified, because an unmentioned gap reads as a clean result.
+    """
+    t = TRACKS[data["track"]]
+    if gate not in dict(t["gates"]):
+        return []
+    if dict(t["gates"])[gate] != "identity":
+        return []
+    return refinement_effect(job, log_entries(job))[1]
 
 
 def human_refinement(job: Path) -> list[str]:
@@ -417,8 +453,7 @@ def human_refinement(job: Path) -> list[str]:
         return ["30-identity/refinement-log.md names no person for the final refinement: the mark's last pass is "
                 "done by a named human (Tim or a designer), not by the agent that prepared it, and not by a "
                 "placeholder or a role. Found: " + ", ".join(sorted({n for n in names})[:4])]
-    entries = [(v, who.strip()) for v, who in REFINED_ENTRY.findall(p.read_text())]
-    return refinement_had_effect(job, entries)
+    return refinement_had_effect(job, log_entries(job))
 
 
 def vault_ok(job: Path, data: dict) -> list[str]:
@@ -556,13 +591,16 @@ def cmd_check(a) -> int:
     job = job_or_exit(a)
     d = load(job)
     probs = readiness(job, d, a.gate)
+    warns = gate_warnings(job, d, a.gate)
     if probs:
         print(f"Gate '{a.gate}' is not ready:")
         for p in probs:
             print(f"  - {p}")
-        return 1
-    print(f"Gate '{a.gate}' is ready to raise.")
-    return 0
+    else:
+        print(f"Gate '{a.gate}' is ready to raise.")
+    for w in warns:
+        print(f"  ! {w}")
+    return 1 if probs else 0
 
 
 def cmd_gate_raise(a) -> int:
@@ -578,11 +616,20 @@ def cmd_gate_raise(a) -> int:
     g["status"] = "pending"
     g["history"].append({"at": iso(), "event": "raised", "forced": bool(probs)})
     pack = job / "gates" / f"{a.gate}.md"
+    warns = gate_warnings(job, d, a.gate)
     if not pack.exists():
-        pack.write_text(render("gate-pack.md", {
+        text = render("gate-pack.md", {
             "gate": a.gate, "name": d.get("codename") or d["client"], "track": TRACKS[d["track"]]["label"],
             "stage": g["closes"], "rounds": f"{g['rounds_used']} of {g['rounds_allowed']}",
-            "date": now().strftime("%d %b %Y %H:%M")}))
+            "date": now().strftime("%d %b %Y %H:%M")})
+        if warns:
+            block = ("\n## Not verified\n\nWritten by studio.py. Keep it in the pack: Tim is told what the studio "
+                     "could not check, not only what it checked.\n\n"
+                     + "\n".join(f"- **{w}**" for w in warns) + "\n")
+            text = text.replace("\n## Trade-offs and risks", block + "\n## Trade-offs and risks", 1)
+        pack.write_text(text)
+    for w in warns:
+        print(f"  ! {w}")
     save(job, d)
     log_decision(job, f"Gate '{a.gate}' raised" + (f" with {len(probs)} readiness issue(s) overridden" if probs else "") + ".")
     print(f"Gate '{a.gate}' pending. Compose gates/{a.gate}.md and send it to Tim.")

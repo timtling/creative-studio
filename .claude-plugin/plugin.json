@@ -1,19 +1,21 @@
 {
   "name": "creative-studio",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "An independent creative studio team of agents for brand, identity, launch and product UI work, for direct clients and as a commissioning service for other teams. 0.3.3 completes the roster with the Builder and Delivery and adds the job close-out, on top of 0.3.0's four creative roles, 0.2.0's Producer, standards and brand vault, and 0.1.0's imagery layer.",
   "author": {
     "name": "Tim Ling",
     "email": "timothy.t.ling@gmail.com"
   },
   "keywords": [
-    "creative-studio",
-    "brand",
-    "identity",
-    "design-tokens",
+    "3d",
     "art-direction",
-    "producer",
-    "commission"
+    "blender",
+    "brand",
+    "commission",
+    "creative-studio",
+    "design-tokens",
+    "identity",
+    "producer"
   ],
   "license": "UNLICENSED"
 }

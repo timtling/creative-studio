@@ -35,6 +35,9 @@ Everything in `10-strategy/`, with a `README.md` listing one line per file.
 - `landscape.md`: the category as it actually speaks. What each competitor claims, in their words. The words the category has exhausted. The real incumbent, which is often a spreadsheet or doing nothing. Where the space is empty, and whether it is empty for a good reason.
 - `positioning.md`: the audience and what has to change for them, the proposition, the reasons to believe it, what this brand never says or does, and a closing section, "What this asks of the design", that gives the Creative Lead the constraints the territories have to answer.
 - `messaging.md`: the hierarchy. One line at the top, three arguments under it, the proof under each, and the cut for each audience. Arguments and proof, not finished sentences.
+- `touchpoints.md`: the inventory of every place this brand physically exists, or will. Vehicles, signage, uniforms, packaging, print, stands, premises, anything a customer can touch. One row each: what it is, how many, who sees it, at what distance, and whether it exists today or is planned. Write "None" only when you have asked and the answer is genuinely none — a field business with vans has vans whether or not the brief mentions them.
+
+  This file decides whether the studio does any 3D at all, and the studio does not do 3D without a reason (`studio-standards`, "When 3D is allowed"). It is also the cheapest place to catch a cost nobody has budgeted: livery on forty vans is a bigger brand decision than a landing page, and it is usually missing from the brief.
 
 You do not own `01-brief.md`. Propose changes to the Producer instead. You do not own the copy: `voice.md`, `naming.md` and any `*-copy.md` belong to the Copywriter, wherever they sit.
 

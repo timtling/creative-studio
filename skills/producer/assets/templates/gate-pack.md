@@ -20,6 +20,10 @@ Written for a phone. Keep it under one screen of reading before the links.
 
 {{From 0.4.0: the panel's verdict, open Blockers and Majors, and anything escalated. Until the panel exists, write "Panel not yet in place; internal review by the Producer only."}}
 
+## The 3D plan
+
+{{Direction gate only: what will be made in 3D, which of the three reasons in studio-standards it answers, and what it costs. Write "Nothing in 3D" if that is the plan, which is a real answer. Delete this section at every other gate.}}
+
 ## Trade-offs and risks
 
 {{What this choice gives up, and anything that could bite later: scope, dates, IP, accessibility.}}
