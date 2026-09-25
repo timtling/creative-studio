@@ -34,7 +34,7 @@ Replace every prompt written in double braces. The brief gate will not raise whi
 
 ## Competitors and references
 
-{{Three to five competitors, and anything the client loves or hates. References are described and linked, never copied.}}
+{{Only the competitors the client named, in the client's own words, each marked (unverified). If the client named none, write "None named by the client" and leave it there. Do not assemble a set from your own knowledge of the sector: the Strategist verifies the landscape against live pages at the strategy stage, and a set invented at intake gets inherited as fact. Also: anything the client loves or hates. References are described and linked, never copied.}}
 
 ## How we will know it worked
 

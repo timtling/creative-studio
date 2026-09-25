@@ -8,7 +8,7 @@ description: >
   gate. Not for NTT DATA consulting engagements (engagement studio) or single commissioned
   deliverables (commission skill).
 metadata:
-  version: "0.2.1"
+  version: "0.3.1"
 ---
 
 # Studio intake
@@ -22,6 +22,8 @@ Load the `producer` and `studio-standards` skills first. `<studio>` below is the
    `python3 <studio>/studio.py init ~/Studio/jobs/<client>-<job> --client <client> --job <job> --track <track> [--codename <word>] [--due YYYY-MM-DD] [--brand external:<source>]`
 5. **File the inputs.** Copy or save everything the client supplied into `00-intake/`, with a one-line `00-intake/README.md` saying what each file is and where it came from.
 6. **Draft the brief** (`01-brief.md`). Fill every prompt. Anything unknown becomes a question in "Open questions for the client", never a guess. Write the working proposition as a hypothesis the Strategist will test.
+
+   **Competitors: list only the ones the client named, in the client's words, each marked (unverified).** If the client named none, write "None named by the client" and move on. Do not assemble a competitive set from your own knowledge of the sector, however obvious it looks. The landscape belongs to the Strategist, who verifies it against live pages at the strategy stage; a set you invent at intake is inherited as fact by every role downstream, and the errors are found late or not at all. The same applies to anything else you might be tempted to supply on the client's behalf: the market's shape, what the category says, who the real incumbent is. Those are strategy findings, not intake ones.
 7. **Draft the scope** (`02-scope.md`). List only the deliverables the client is buying, using the output catalogue. The "not included" list is as important as the deliverables. Leave the fee as "To be set by Tim".
 8. **Plan**: `studio.py plan` plans forward from today and shows the buffer before the client date. If it reports that the plan does not fit, set out the options (compress a stage, cut scope, move the date) with your recommendation. Do not quietly squeeze stages.
 9. **Check and raise**: `studio.py check brief`, fix what it reports, then `studio.py gate raise brief`.

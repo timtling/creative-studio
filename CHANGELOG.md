@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 (25 Sep 2026)
+
+- Intake lists only the competitors the client named, in the client's words, marked unverified, and leaves the competitive landscape to the Strategist. Found on the first sprint: the Producer assembled a plausible set at intake, it was wrong in four ways, and it was inherited as fact until the Strategist verified it against live pages two stages later. The same rule now covers anything else the Producer might supply on the client's behalf: the market's shape, what the category says, who the real incumbent is. Those are strategy findings, not intake ones.
+
 ## 0.3.0 (25 Sep 2026)
 
 The four creative roles. A brand sprint now has someone to do every stage of it.
