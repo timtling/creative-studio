@@ -1,0 +1,86 @@
+{
+  "$description": "Brand name",
+  "color": {
+    "$type": "color",
+    "$description": "Primitives. The only place raw colour values live. Name by role in the palette, not by use.",
+    "ink": { "$value": null, "$description": "Darkest brand neutral, used for text" },
+    "paper": { "$value": null, "$description": "Lightest brand neutral, used for surfaces" },
+    "mid": { "$value": null, "$description": "Mid neutral for muted text and lines; check contrast on paper" },
+    "line": { "$value": null, "$description": "Hairline neutral for borders" },
+    "signal": { "$value": null, "$description": "The brand's primary accent" },
+    "support": { "$value": null, "$description": "Secondary accent" }
+  },
+  "text": {
+    "$type": "color",
+    "default": { "$value": "{color.ink}" },
+    "muted": { "$value": "{color.mid}" },
+    "inverse": { "$value": "{color.paper}" }
+  },
+  "surface": {
+    "$type": "color",
+    "default": { "$value": "{color.paper}" },
+    "inverse": { "$value": "{color.ink}" }
+  },
+  "border": {
+    "$type": "color",
+    "default": { "$value": "{color.line}" }
+  },
+  "accent": {
+    "$type": "color",
+    "default": { "$value": "{color.signal}" },
+    "secondary": { "$value": "{color.support}" }
+  },
+  "font": {
+    "$type": "fontFamily",
+    "display": { "$value": null, "$description": "Licence must cover the client's uses; record it in the brand book" },
+    "body": { "$value": null },
+    "mono": { "$value": ["ui-monospace", "monospace"] }
+  },
+  "weight": {
+    "$type": "fontWeight",
+    "regular": { "$value": 400 },
+    "strong": { "$value": 600 }
+  },
+  "type": {
+    "$type": "dimension",
+    "$description": "Modular scale. State the ratio in the brand book.",
+    "caption": { "$value": null },
+    "body": { "$value": null },
+    "lead": { "$value": null },
+    "h3": { "$value": null },
+    "h2": { "$value": null },
+    "h1": { "$value": null },
+    "display": { "$value": null }
+  },
+  "space": {
+    "$type": "dimension",
+    "$description": "Base unit and multiples.",
+    "1": { "$value": "4px" },
+    "2": { "$value": "8px" },
+    "3": { "$value": "12px" },
+    "4": { "$value": "16px" },
+    "6": { "$value": "24px" },
+    "8": { "$value": "32px" },
+    "12": { "$value": "48px" },
+    "16": { "$value": "64px" }
+  },
+  "radius": {
+    "$type": "dimension",
+    "none": { "$value": "0px" },
+    "sm": { "$value": null },
+    "md": { "$value": null }
+  },
+  "motion": {
+    "duration": {
+      "$type": "duration",
+      "fast": { "$value": "120ms" },
+      "base": { "$value": "200ms" },
+      "slow": { "$value": "360ms" }
+    },
+    "easing": {
+      "$type": "cubicBezier",
+      "standard": { "$value": [0.2, 0, 0, 1] },
+      "exit": { "$value": [0.4, 0, 1, 1] }
+    }
+  }
+}

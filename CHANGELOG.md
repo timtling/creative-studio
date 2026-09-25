@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0 (25 Sep 2026)
+
+The Producer, the standards and the brand vault. The studio stands on its own; the engagement studio is one of its requesters.
+
+- Producer operating model: five tracks (sprint, launch-kit, product-ui, programme, commission), roster and file ownership, gates, client feedback triage, commissions, where jobs live, output catalogue.
+- `studio.py`: job set-up per track, forward planning with buffer against the client date, gate readiness checks, gate decisions with Tim's words logged, client revision rounds against the allowance, feedback classes, change requests, status.
+- Stage skills: `studio-intake`, `studio-gate`, `studio-status`, `commission`. Named so they do not trigger on engagement studio work.
+- Templates: creative brief, scope of work (draft statement of work with ownership, licensing and AI-use terms), phone-readable gate pack, commission brief.
+- `studio-standards`: operating rules, craft and copy standards, references and originality, file conventions, and the anti-generic list.
+- Brand vault: W3C design token template, `vault.py` validate (structure, values, aliases, cycles, WCAG AA on body text), build (CSS custom properties, flat JSON, linear colours for Blender, a tokens page), contrast matrix and lint. A hook reports literal colours written into job files.
+- Art Director loads the standards and the vault, and works under external brands on commissions.
+- 37 tests.
+
 ## 0.1.0 (25 Sep 2026)
 
 The imagery layer.

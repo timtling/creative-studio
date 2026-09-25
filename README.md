@@ -1,85 +1,74 @@
 # creative-studio
 
-A creative studio team of agents for SME and start-up brand, product and launch work, built as a Claude plugin in the same pattern as `engagement-studio`.
+An independent creative studio run by a team of agents. It takes brand, identity, launch, website and product UI work for direct clients (SMEs, start-ups, corporates), and one-off commissions from other teams, including the engagement studio. A Producer runs each job through stages and gates. Specialists make the work, a panel reviews it, and Tim signs off every gate.
 
-Version 0.1.0 ships the imagery layer: the **Art Director** agent, the **image-generation** skill on Recraft and Replicate, a provenance ledger, and hooks that enforce budget, licence and paid-plan rules. The Producer, the other studio agents and the panel come in later versions.
+## What is built
 
-## Set-up (once, about ten minutes)
-
-### 1. Recraft: paid plan first, then the connector
-
-1. Put the Recraft account on a **paid plan before the first client generation**. Free-plan images are public, owned by Recraft and personal-use only, and upgrading later does not transfer them.
-2. In Claude, open **Settings → Connectors → Add custom connector**:
-   - Name: `Recraft` (exactly, because the hooks match on it)
-   - URL: `https://mcp.recraft.ai/mcp`
-   - Shortcut: [Add Recraft to Claude](https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=Recraft&connectorUrl=https%3A%2F%2Fmcp.recraft.ai%2Fmcp)
-3. On first use, Claude sends you to Recraft to authorise with OAuth. There is no API key to manage. Calls draw on the plan's credits.
-
-### 2. Replicate: token, then the connector
-
-1. Create an API token at replicate.com → Account → API tokens, named `creative-studio`.
-2. In Claude, open **Settings → Connectors → Add custom connector**:
-   - Name: `Replicate` (exactly)
-   - URL: `https://mcp.replicate.com/sse`
-3. Click **Connect**, paste the token, then **Log in and Approve**.
-4. Note that Replicate's hosted server uses the SSE transport, and Claude has said SSE support may be retired. If Replicate publishes a streamable HTTP URL, switch to it.
-
-Both connectors live on your Claude account, so they work in the web app, the desktop app, mobile and cloud sessions without installing anything locally.
-
-### 3. Network allowlist for saving files
-
-Generation runs from Claude's servers, but saving the output into a job folder happens in the session's sandbox, which only reaches allowlisted hosts. Add these to the network allowlist in Claude's settings (Settings → Capabilities, code execution network access):
-
-```
-img.recraft.ai
-replicate.delivery
-*.replicate.delivery
-```
-
-For Claude Code on the web, add the same hosts under the environment's **Network access → Custom** and keep the default package-manager list.
-
-Without these entries, generation still works but outputs stay `pending-fetch`. Replicate deletes outputs after an hour.
-
-### 4. Claude Code (for developing the plugin)
-
-`.mcp.json` in this repo registers both servers for Claude Code sessions opened here. Run `/mcp` once to authenticate. It is a development convenience and is not packaged into the plugin: the packaged plugin relies on the account-level connectors above.
-
-### 5. Install
-
-```
-tools/package.sh            # builds dist/creative-studio.plugin
-```
-
-Install the `.plugin` file in Claude the same way as `engagement-studio`.
-
-## Per job
-
-```
-python3 skills/image-generation/scripts/imagekit.py init jobs/<client>-<job> --client <client> --job <job> --cap-calls 60
-python3 skills/image-generation/scripts/imagekit.py confirm-recraft-paid --plan Pro --job jobs/<client>-<job>
-```
-
-Then brief the Art Director. The skill covers the rest.
-
-## Check the set-up
-
-In a new session with the plugin installed and a test job initialised:
-
-1. "Show my Recraft account and remaining credits." (a read call, never blocked)
-2. "Generate one draft vector icon of a paper boat with Recraft." The hook should save it as `A-001`. If it shows `pending-fetch`, the allowlist is not in place yet.
-3. "Search Replicate for a photoreal text-to-image model." (read only). Clear one with `approve-model` and run a single draft.
-4. Run `imagekit.py status` and `imagekit.py sheet`.
-
-## What the hooks enforce
-
-| Before a call that spends credits | After any Recraft or Replicate call |
+| Version | Adds |
 |---|---|
-| Recraft paid plan confirmed for the job | Spend logged to `assets/calls.jsonl` |
-| Replicate model cleared for commercial use, named as owner/name | Outputs downloaded to `assets/raw/` and recorded in `assets/ledger.jsonl` |
-| Call cap and optional US$ cap not exceeded | Inline images saved directly |
-| Exactly one active job, so assets cannot cross clients | The agent is told what was saved, what is pending and the minutes left |
+| 0.1.0 | Art Director agent; image generation on Recraft and Replicate with a provenance ledger, budget and licence guard rails (parked until needed) |
+| 0.2.0 | Producer workflow: five tracks, job set-up, planning, gates, client revision rounds, feedback triage, change requests, commissions. Studio standards and the anti-generic list. Brand vault: design tokens with validation, contrast checks, CSS, Blender and swatch-page builds, and a lint hook |
 
-Outside a studio job folder, both hooks do nothing.
+Next: 0.3.0, the seven-lens panel and a studio control room so jobs outlive a session. Then 0.4.0, the Strategist, Creative Lead, Copywriter and Identity designer, and one full Brand Sprint on a fictional start-up.
+
+## Using it
+
+Install `dist/creative-studio.plugin` in Claude, then:
+
+- **Start a job**: "New studio job: a seed-stage fintech wants a brand before their raise in October. Their email is below." The Producer picks the track, opens the job, drafts the brief, scope and plan, and sends you the brief gate pack.
+- **Reply to a gate** with `approve`, `approve with: ...` or `rework: ...`.
+- **Check progress**: "Where are we on heron?"
+- **Commission from the engagement studio**: "Commission the studio for a cover key visual for barbet, NTT DATA brand level B2, due Friday."
+
+Skills: `producer`, `studio-intake`, `studio-gate`, `studio-status`, `commission`, `studio-standards`, `brand-vault`, `image-generation`. They are named and described so they do not trigger on engagement studio work.
+
+## Tracks
+
+| Track | Gates (client revision rounds) |
+|---|---|
+| `sprint`: brand for a start-up or SME | brief (1), direction (1), system (2), final (1) |
+| `launch-kit`: site, deck, social for an existing brand | brief (1), final (2) |
+| `product-ui`: flows, screens, prototype | brief (1), direction (1), system (2), final (1) |
+| `programme`: corporate brand programme | brief (1), direction (1), system (2), governance (1), final (2) |
+| `commission`: one deliverable for another team | brief (1, can be approved by the requester), final (1) |
+
+## Where jobs live
+
+A job is a folder (`<client>-<job>`) holding the job file, the brief, scope, plan, stage folders, the vault, gate packs and the decisions log. Keep jobs on your computer (link the session) or save them to Drive. A cloud session's own folder does not survive the session. The 0.3.0 control room will give jobs a permanent home. Never keep client jobs inside this repo.
+
+## Scripts
+
+All standard-library Python, run by the skills:
+
+- `skills/producer/scripts/studio.py`: `init`, `plan`, `check`, `gate raise|record`, `round`, `feedback`, `cr`, `status`, `set-active`
+- `skills/brand-vault/scripts/vault.py`: `init`, `validate`, `build`, `contrast`, `lint`, `hook-lint`
+- `skills/image-generation/scripts/imagekit.py`: job ledger, budget, capture, contact sheet, provenance
+
+## Hooks
+
+| When | What |
+|---|---|
+| After writing HTML, CSS, SVG or script files in a job | Reports literal colours that bypass the vault |
+| Before a Recraft or Replicate call that spends credits | Blocks it without a confirmed paid plan, a cleared model, budget, or a single active job |
+| After a Recraft or Replicate call | Saves outputs to the ledger before Replicate deletes them |
+
+All hooks do nothing outside a studio job.
+
+## Optional: imagery set-up (parked)
+
+Only needed when generated imagery comes back into scope.
+
+1. Put Recraft on a paid plan first. Free-plan images are public and owned by Recraft, and upgrading later does not transfer them.
+2. Add custom connectors in Claude (Settings → Connectors), named exactly `Recraft` (`https://mcp.recraft.ai/mcp`, sign in with OAuth) and `Replicate` (`https://mcp.replicate.com/sse`, paste an API token).
+3. Add `img.recraft.ai`, `replicate.delivery` and `*.replicate.delivery` to the network allowlist in Claude's settings, so outputs can be saved into jobs.
+4. For Claude Code: `claude mcp add --transport http recraft https://mcp.recraft.ai/mcp --scope user` and `claude mcp add --transport sse replicate https://mcp.replicate.com/sse --scope user`, then `/mcp` to authenticate. `tools/mcp.example.json` has the same as a project config.
+
+## Development
+
+```
+python3 -m pytest tests -q     # 37 tests
+tools/package.sh               # runs the tests, builds dist/creative-studio.plugin
+```
 
 ## Layout
 
@@ -87,11 +76,15 @@ Outside a studio job folder, both hooks do nothing.
 .claude-plugin/plugin.json
 agents/art-director.md
 hooks/hooks.json
-skills/image-generation/
-  SKILL.md
-  references/{model-routing,prompting,licensing}.md
-  scripts/imagekit.py
-tests/test_imagekit.py      # python3 -m pytest tests -q
-tools/package.sh
-.mcp.json                   # Claude Code development only
+skills/
+  producer/            SKILL.md, scripts/studio.py, assets/templates/{brief,scope,gate-pack,commission}.md
+  studio-intake/       SKILL.md
+  studio-gate/         SKILL.md
+  studio-status/       SKILL.md
+  commission/          SKILL.md
+  studio-standards/    SKILL.md, references/anti-generic.md
+  brand-vault/         SKILL.md, scripts/vault.py, assets/tokens.template.json
+  image-generation/    SKILL.md, references/, scripts/imagekit.py
+tests/
+tools/package.sh, tools/mcp.example.json
 ```

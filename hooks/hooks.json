@@ -1,5 +1,5 @@
 {
-  "description": "Creative studio imagery guard rails. Before a Recraft or Replicate call that spends credits: deny it if the job's Recraft paid plan is unconfirmed, the Replicate model is not cleared for commercial use, the budget is spent, or more than one client job is active. After any Recraft or Replicate call: log spend, save outputs to the job's ledger before Replicate deletes them, and tell the agent what was saved or is pending. Both exit silently outside a studio job.",
+  "description": "Creative studio guard rails. Imagery: before a Recraft or Replicate call that spends credits, deny it if the job's Recraft paid plan is unconfirmed, the Replicate model is not cleared for commercial use, the budget is spent, or more than one client job is active; after any such call, log spend and save outputs to the job's ledger before Replicate deletes them. Vault: after a write to an HTML, CSS, SVG or script file inside a job, report literal colours that bypass the brand vault. All hooks exit silently outside a studio job.",
   "hooks": {
     "PreToolUse": [
       {
@@ -21,6 +21,16 @@
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/image-generation/scripts/imagekit.py\" hook-post",
             "timeout": 90
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/brand-vault/scripts/vault.py\" hook-lint",
+            "timeout": 20
           }
         ]
       }

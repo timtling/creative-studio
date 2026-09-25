@@ -1,7 +1,7 @@
 {
   "name": "creative-studio",
-  "version": "0.1.0",
-  "description": "A high-end creative studio team of agents for SME and start-up brand, product and launch work. 0.1.0 ships the imagery layer: the Art Director agent, the image-generation skill on Recraft and Replicate, a provenance ledger and budget, licence and paid-plan guard rails.",
+  "version": "0.2.0",
+  "description": "An independent creative studio team of agents for brand, identity, launch and product UI work, for direct clients and as a commissioning service for other teams. 0.2.0 adds the Producer (tracks, gates, client revision rounds, change requests, commissions), the studio standards and the brand vault, on top of 0.1.0's Art Director and imagery layer.",
   "author": {
     "name": "Tim Ling",
     "email": "timothy.t.ling@gmail.com"
@@ -9,10 +9,11 @@
   "keywords": [
     "creative-studio",
     "brand",
+    "identity",
+    "design-tokens",
     "art-direction",
-    "image-generation",
-    "recraft",
-    "replicate"
+    "producer",
+    "commission"
   ],
   "license": "UNLICENSED"
 }
