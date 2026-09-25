@@ -9,6 +9,7 @@ An independent creative studio run by a team of agents. It takes brand, identity
 | 0.1.0 | Art Director agent; image generation on Recraft and Replicate with a provenance ledger, budget and licence guard rails (parked until needed) |
 | 0.2.0 | Producer workflow: five tracks, job set-up, planning, gates, client revision rounds, feedback triage, change requests, commissions. Studio standards and the anti-generic list. Brand vault: design tokens with validation, contrast checks, CSS, Blender and swatch-page builds, and a lint hook |
 | 0.3.0 | The four creative roles: Strategist, Creative Lead, Copywriter and Identity designer. The Producer now has someone to route every stage of a brand sprint to |
+| 0.3.3 | Builder and Delivery complete the roster, so a sprint runs intake to handover. The `studio-close` skill turns a finished job into an intervention log, a fix list and eval cases. The system gate refuses a person-attributed version that renders identically to the one before it |
 
 Next: 0.4.0, the seven-lens panel and a studio control room so jobs outlive a session, then one full Brand Sprint run end to end on a fictional start-up.
 
@@ -21,7 +22,7 @@ Install `dist/creative-studio.plugin` in Claude, then:
 - **Check progress**: "Where are we on heron?"
 - **Commission from the engagement studio**: "Commission the studio for a cover key visual for barbet, NTT DATA brand level B2, due Friday."
 
-Skills: `producer`, `studio-intake`, `studio-gate`, `studio-status`, `commission`, `studio-standards`, `brand-vault`, `image-generation`. They are named and described so they do not trigger on engagement studio work.
+Skills: `producer`, `studio-intake`, `studio-gate`, `studio-status`, `studio-close`, `commission`, `studio-standards`, `brand-vault`, `image-generation`. They are named and described so they do not trigger on engagement studio work.
 
 ## The roster
 
@@ -34,8 +35,10 @@ The Producer runs the job in the main session and routes each stage to the agent
 | `copywriter` | `voice.md`, `naming.md`, `*-copy.md`, wherever they sit | from territories onwards |
 | `identity-designer` | `30-identity/` and `vault/`: marks, system, tokens | identity |
 | `art-director` | `assets/`: art direction, shot list, ledger, contact sheet | wherever imagery is needed |
+| `builder` | `50-applications/`, `50-make/`: pages, decks, launch assets | applications |
+| `delivery` | `99-handover/`, `99-return/`: the client package | handover |
 
-Still to come: Product designer, Builder, Delivery and the panel.
+Still to come: the Product designer and the panel.
 
 ## Tracks
 
@@ -81,7 +84,7 @@ Only needed when generated imagery comes back into scope.
 ## Development
 
 ```
-python3 -m pytest tests -q     # 84 tests
+python3 -m pytest tests -q     # 96 tests
 tools/package.sh               # runs the tests, builds dist/creative-studio.plugin
 ```
 
@@ -90,13 +93,14 @@ tools/package.sh               # runs the tests, builds dist/creative-studio.plu
 ```
 .claude-plugin/plugin.json
 agents/
-  art-director.md  copywriter.md  creative-lead.md
-  identity-designer.md  strategist.md
+  art-director.md  builder.md  copywriter.md  creative-lead.md
+  delivery.md  identity-designer.md  strategist.md
 hooks/hooks.json
 skills/
   producer/            SKILL.md, scripts/studio.py, assets/templates/{brief,scope,gate-pack,commission}.md
   studio-intake/       SKILL.md
   studio-gate/         SKILL.md
+  studio-close/        SKILL.md
   studio-status/       SKILL.md
   commission/          SKILL.md
   studio-standards/    SKILL.md, references/anti-generic.md

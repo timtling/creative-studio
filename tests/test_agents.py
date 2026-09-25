@@ -25,7 +25,8 @@ def front(p: Path) -> dict:
 
 def test_agents_exist():
     assert {p.stem for p in AGENTS} == {
-        "art-director", "copywriter", "creative-lead", "identity-designer", "strategist"}
+        "art-director", "builder", "copywriter", "creative-lead", "delivery",
+        "identity-designer", "strategist"}
 
 
 @pytest.mark.parametrize("p", AGENTS, ids=lambda p: p.stem)

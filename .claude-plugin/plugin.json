@@ -1,7 +1,7 @@
 {
   "name": "creative-studio",
-  "version": "0.3.2",
-  "description": "An independent creative studio team of agents for brand, identity, launch and product UI work, for direct clients and as a commissioning service for other teams. 0.3.0 adds the four creative roles (Strategist, Creative Lead, Copywriter, Identity designer), on top of 0.2.0's Producer, studio standards and brand vault, and 0.1.0's Art Director and imagery layer.",
+  "version": "0.3.3",
+  "description": "An independent creative studio team of agents for brand, identity, launch and product UI work, for direct clients and as a commissioning service for other teams. 0.3.3 completes the roster with the Builder and Delivery and adds the job close-out, on top of 0.3.0's four creative roles, 0.2.0's Producer, standards and brand vault, and 0.1.0's imagery layer.",
   "author": {
     "name": "Tim Ling",
     "email": "timothy.t.ling@gmail.com"

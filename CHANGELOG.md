@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.3 (25 Sep 2026)
+
+Everything in this release came out of the studio's first job.
+
+- `builder`: owns `50-applications/` and `50-make/`. Tokens only, never literal values; renders at phone and desktop width and judges the screenshots rather than the markup; never changes the identity to make a build easier, and never puts a mark or name into a deliverable the job's record says is unresolved.
+- `delivery`: owns `99-handover/` and `99-return/`. Export matrix, asset index, tokens package and licence notes, packaged against `02-scope.md` line by line rather than against the folder. Opens every file it ships, never fixes a defect quietly, and ships nothing the record shows is unresolved.
+- `studio-close` skill: turns a finished job into an intervention log, a fix list and eval cases drawn from `90-decisions.md` and Tim's gate replies. It counts Tim's decisions, Tim's corrections and role-to-role catches separately, because they mean different things, and it forbids writing a case for something that did not happen.
+- **The refinement effect check.** A person-attributed version that renders identically to the one before it is now refused at the system gate. Found on Cypress: a hand file saved from a real editor, logged in good faith, with the change absent. Attribution without effect is not evidence. Renders through whichever of rsvg-convert, inkscape or cairosvg is present and compares decoded pixels with a standard-library PNG decoder; on a machine with no renderer it checks attribution and stays silent rather than blocking work it cannot assess.
+- The Producer labels every figure an agent reports as reported until it has checked it. On the first job a contrast ratio, a small-size type table and a customer statistic all travelled upward unverified, and one reached Tim as fact.
+- 96 tests.
+
 ## 0.3.2 (25 Sep 2026)
 
 - The system gate's named-human check no longer accepts a placeholder or a role. It matched any text after `refined by:`, so `<name or role>`, `[Name]`, `TODO` and `the identity designer` all satisfied the check that exists to protect the client's rights in the mark. Found by the Identity designer on the first job to reach the identity stage: its own draft log contained a format example, the gate passed on it, and it reported the hole rather than working around it. Names are now normalised (parentheticals and punctuation dropped) and tested against placeholder syntax, placeholder words and every studio role, and the failure message quotes what it found. Two-letter given names still pass.

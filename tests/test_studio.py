@@ -158,6 +158,71 @@ def test_placeholder_in_the_log_does_not_open_the_system_gate(job, tmp_path):
     assert problems() == []
 
 
+SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40">{}</svg>'
+BAR = '<rect x="{x}" y="10" width="20" height="20" fill="#17191a"/>'
+
+
+def _write_mark(job, version, x):
+    d = job / "30-identity" / "mark"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"tessel-wordmark-v{version}.svg").write_text(SVG.format(BAR.format(x=x)))
+
+
+def test_png_decoder_round_trips_a_real_png(tmp_path):
+    """The comparison is worthless if the decoder is: check it against a known image."""
+    png = tmp_path / "x.png"
+    svg = tmp_path / "x.svg"
+    svg.write_text(SVG.format(BAR.format(x=10)))
+    if st.renderer() is None:
+        pytest.skip("no SVG renderer on this machine")
+    assert st.render_differs(svg, svg) is False       # a file never differs from itself
+
+
+def test_a_pass_that_changed_nothing_is_refused(job, tmp_path):
+    """Cypress: a hand file saved from a real editor, logged in good faith, and
+    geometrically identical to the version before it."""
+    if st.renderer() is None:
+        pytest.skip("no SVG renderer on this machine")
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    log = job / "30-identity" / "refinement-log.md"
+    problems = lambda: [x for x in st.readiness(job, st.load(job), "system") if "30-identity" in x]
+
+    _write_mark(job, 1, 10)
+    _write_mark(job, 2, 10)                            # saved, but nothing moved
+    log.write_text("- 2026-10-06 · v2 · refined by: Tim Ling · kerned the wordmark\n")
+    assert any("renders identically" in p for p in problems())
+    assert any("v2" in p for p in problems())
+
+    _write_mark(job, 2, 16)                            # re-saved, this time with the change
+    assert problems() == []
+
+
+def test_effect_check_only_judges_person_attributed_passes(job, tmp_path):
+    """An agent's own pass is not the thing being checked, so an identical render is not a finding."""
+    if st.renderer() is None:
+        pytest.skip("no SVG renderer on this machine")
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    _write_mark(job, 1, 10)
+    _write_mark(job, 2, 10)
+    (job / "30-identity" / "refinement-log.md").write_text(
+        "- 2026-10-05 · v2 · refined by: Identity designer · rebuilt the master\n"
+        "- 2026-10-06 · v3 · refined by: Tim Ling · kerned it\n")
+    # v3 has no file pair to compare, and v2 is the agent's: no effect finding either way
+    assert not any("renders identically" in p for p in st.readiness(job, st.load(job), "system"))
+
+
+def test_effect_check_is_silent_without_a_renderer(job, tmp_path, monkeypatch):
+    """On a machine with no renderer the tool checks attribution and says nothing else,
+    rather than blocking work it cannot actually assess."""
+    monkeypatch.setattr(st, "renderer", lambda: None)
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    _write_mark(job, 1, 10)
+    _write_mark(job, 2, 10)
+    (job / "30-identity" / "refinement-log.md").write_text(
+        "- 2026-10-06 · v2 · refined by: Tim Ling · kerned the wordmark\n")
+    assert [x for x in st.readiness(job, st.load(job), "system") if "30-identity" in x] == []
+
+
 def test_identity_check_is_tied_to_the_stage_not_the_gate_name(tmp_path, monkeypatch):
     """product-ui has a system gate too, but it closes screens: no mark, no log needed."""
     monkeypatch.delenv("STUDIO_JOB", raising=False)

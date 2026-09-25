@@ -204,6 +204,8 @@ def nonempty(d: Path) -> bool:
 # A final mark is refined by a named human, and the log says who. The agent prepares
 # the master; it does not sign for the pass that makes the mark final.
 REFINED_BY = re.compile(r"^[ \t]*[-*][ \t].*?\brefined by:[ \t]*([^\n|·]+)", re.I | re.M)
+# The same bullet, with its version: `- <date> · v4 · refined by: <name> · <what>`
+REFINED_ENTRY = re.compile(r"^[ \t]*[-*][ \t].*?\bv(\d+)\b.*?\brefined by:[ \t]*([^\n|·]+)", re.I | re.M)
 NOT_A_PERSON = {
     "", "tbc", "tbd", "todo", "xxx", "n/a", "na", "none", "nobody", "unknown", "pending",
     "ai", "claude", "claude code", "assistant", "the assistant", "llm", "the agent", "agent",
@@ -238,6 +240,138 @@ def _person_name(raw: str) -> bool:
     return stripped not in NOT_A_PERSON
 
 
+# --------------------------------------------------------------------------- refinement effect
+# A person-attributed pass has to have changed something. Cypress found the gap:
+# a hand file was saved from a real editor, logged in good faith, and rendered
+# identically to the version before it. Attribution without effect is not evidence.
+
+RENDERERS = (
+    ("rsvg-convert", lambda src, out, w: ["rsvg-convert", "-w", str(w), "-o", str(out), str(src)]),
+    ("inkscape", lambda src, out, w: ["inkscape", "--export-type=png", f"--export-width={w}",
+                                      f"--export-filename={out}", str(src)]),
+    ("cairosvg", lambda src, out, w: ["cairosvg", "-W", str(w), "-o", str(out), str(src)]),
+)
+RENDER_WIDTH = 1600
+# Anti-aliasing and renderer noise move a handful of pixels; a real edit moves thousands.
+IDENTICAL_FRACTION = 0.0002
+
+
+def renderer() -> tuple[str, object] | None:
+    import shutil
+    for name, argv in RENDERERS:
+        if shutil.which(name):
+            return name, argv
+    return None
+
+
+def _decode_png(data: bytes) -> tuple[int, int, bytes] | None:
+    import struct, zlib
+    if data[:8] != b"\x89PNG\r\n\x1a\n":
+        return None
+    pos, idat, hdr = 8, bytearray(), None
+    while pos + 8 <= len(data):
+        ln, typ = struct.unpack(">I4s", data[pos:pos + 8])
+        body = data[pos + 8:pos + 8 + ln]
+        if typ == b"IHDR":
+            hdr = struct.unpack(">IIBBBBB", body)
+        elif typ == b"IDAT":
+            idat += body
+        elif typ == b"IEND":
+            break
+        pos += 12 + ln
+    if not hdr:
+        return None
+    w, h, depth, ctype, comp, filt, interlace = hdr
+    if depth != 8 or interlace != 0 or ctype not in (0, 2, 4, 6):
+        return None
+    channels = {0: 1, 2: 3, 4: 2, 6: 4}[ctype]
+    stride = w * channels
+    raw = zlib.decompress(bytes(idat))
+    out, prev = bytearray(), bytearray(stride)
+    i = 0
+    for _ in range(h):
+        ft = raw[i]; i += 1
+        line = bytearray(raw[i:i + stride]); i += stride
+        for x in range(stride):
+            a = line[x - channels] if x >= channels else 0
+            b = prev[x]
+            c = prev[x - channels] if x >= channels else 0
+            if ft == 1:
+                line[x] = (line[x] + a) & 0xFF
+            elif ft == 2:
+                line[x] = (line[x] + b) & 0xFF
+            elif ft == 3:
+                line[x] = (line[x] + (a + b) // 2) & 0xFF
+            elif ft == 4:
+                pa, pb, pc = abs(b - c), abs(a - c), abs(a + b - 2 * c)
+                pr = a if (pa <= pb and pa <= pc) else (b if pb <= pc else c)
+                line[x] = (line[x] + pr) & 0xFF
+        out += line
+        prev = line
+    return w, h, bytes(out)
+
+
+def render_differs(a: Path, b: Path) -> bool | None:
+    """True if the two files render differently, False if identically, None if unknown."""
+    r = renderer()
+    if r is None:
+        return None
+    import subprocess, tempfile
+    _, argv = r
+    pixels = []
+    with tempfile.TemporaryDirectory() as td:
+        for n, src in enumerate((a, b)):
+            out = Path(td) / f"{n}.png"
+            try:
+                subprocess.run(argv(src, out, RENDER_WIDTH), check=True, capture_output=True, timeout=60)
+            except Exception:
+                return None
+            got = _decode_png(out.read_bytes()) if out.exists() else None
+            if got is None:
+                return None
+            pixels.append(got)
+    (w1, h1, p1), (w2, h2, p2) = pixels
+    if (w1, h1) != (w2, h2):
+        return True
+    if len(p1) != len(p2):
+        return True
+    diff = sum(1 for x, y in zip(p1, p2) if x != y)
+    return diff > len(p1) * IDENTICAL_FRACTION
+
+
+def version_pairs(job: Path, version: int) -> list[tuple[Path, Path]]:
+    """Files at `version` alongside their immediate predecessor, by the naming convention."""
+    out = []
+    for f in sorted((job / STAGE_DIRS["identity"]).rglob(f"*-v{version}.*")):
+        prev = f.with_name(f.name.replace(f"-v{version}", f"-v{version - 1}"))
+        if prev.exists():
+            out.append((prev, f))
+    return out
+
+
+def refinement_had_effect(job: Path, entries: list[tuple[str, str]]) -> list[str]:
+    """Did the newest person-attributed pass change anything it can be checked against?"""
+    versions = [int(v) for v, who in entries if v and _person_name(who)]
+    if not versions:
+        return []
+    v = max(versions)
+    if v < 2:
+        return []
+    pairs = version_pairs(job, v)
+    if not pairs:
+        return []
+    verdicts = [(prev, cur, render_differs(prev, cur)) for prev, cur in pairs]
+    known = [d for _, _, d in verdicts if d is not None]
+    if not known:
+        return []          # no renderer here: attribution is all this machine can check
+    if any(known):
+        return []
+    names = ", ".join(cur.name for _, cur, d in verdicts if d is False)
+    return [f"30-identity: v{v} is attributed to a person but renders identically to v{v - 1} ({names}). "
+            "A pass that changed nothing is not a refinement: check the file was saved with the change in it, "
+            "or log what actually happened."]
+
+
 def human_refinement(job: Path) -> list[str]:
     """The identity stage is not ready until a person has signed the refinement log."""
     p = job / STAGE_DIRS["identity"] / "refinement-log.md"
@@ -251,7 +385,8 @@ def human_refinement(job: Path) -> list[str]:
         return ["30-identity/refinement-log.md names no person for the final refinement: the mark's last pass is "
                 "done by a named human (Tim or a designer), not by the agent that prepared it, and not by a "
                 "placeholder or a role. Found: " + ", ".join(sorted({n for n in names})[:4])]
-    return []
+    entries = [(v, who.strip()) for v, who in REFINED_ENTRY.findall(p.read_text())]
+    return refinement_had_effect(job, entries)
 
 
 def vault_ok(job: Path, data: dict) -> list[str]:
