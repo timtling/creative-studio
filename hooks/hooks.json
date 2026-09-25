@@ -1,0 +1,29 @@
+{
+  "description": "Creative studio imagery guard rails. Before a Recraft or Replicate call that spends credits: deny it if the job's Recraft paid plan is unconfirmed, the Replicate model is not cleared for commercial use, the budget is spent, or more than one client job is active. After any Recraft or Replicate call: log spend, save outputs to the job's ledger before Replicate deletes them, and tell the agent what was saved or is pending. Both exit silently outside a studio job.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__([Rr]ecraft|[Rr]eplicate)__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/image-generation/scripts/imagekit.py\" hook-pre",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__([Rr]ecraft|[Rr]eplicate)__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/skills/image-generation/scripts/imagekit.py\" hook-post",
+            "timeout": 90
+          }
+        ]
+      }
+    ]
+  }
+}
