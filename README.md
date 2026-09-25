@@ -34,7 +34,7 @@ Skills: `producer`, `studio-intake`, `studio-gate`, `studio-status`, `commission
 
 ## Where jobs live
 
-A job is a folder (`<client>-<job>`) holding the job file, the brief, scope, plan, stage folders, the vault, gate packs and the decisions log. Keep jobs on your computer (link the session) or save them to Drive. A cloud session's own folder does not survive the session. The 0.3.0 control room will give jobs a permanent home. Never keep client jobs inside this repo.
+The Mac mini is the studio's home machine: jobs in `~/Studio/jobs/<client>-<job>`, this repo in `~/Github Projects/creative-studio`, and Blender with its GPU. Keep it awake and the Claude desktop app running, and link studio sessions to it. A job holds the job file, brief, scope, plan, stage folders, vault, gate packs and decisions log. Back up `~/Studio/jobs` (Time Machine or a Drive sync). Never keep client jobs inside this repo.
 
 ## Scripts
 

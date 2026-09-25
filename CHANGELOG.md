@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 (25 Sep 2026)
+
+- Jobs live on the Mac mini at `~/Studio/jobs` by default. The Producer says so at intake when the Mac mini cannot be reached, and never leaves a job living only in a cloud session.
+
 ## 0.2.0 (25 Sep 2026)
 
 The Producer, the standards and the brand vault. The studio stands on its own; the engagement studio is one of its requesters.

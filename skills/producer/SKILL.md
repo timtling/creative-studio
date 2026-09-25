@@ -8,7 +8,7 @@ description: >
   client revision rounds, change requests, commissions and data handling. Load it before any studio stage
   skill acts. It does not apply to NTT DATA consulting engagements, which run through the engagement studio.
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Producer
@@ -75,11 +75,14 @@ Other teams commission one deliverable at a time (`commission` skill). The engag
 
 ## Where jobs live
 
-A job is a folder named `<client>-<job>`. It must outlive the session:
+A job is a folder named `<client>-<job>`. It must outlive the session.
 
-- If this session is linked to Tim's computer, keep jobs in a studio jobs folder there. Ask him which folder the first time, and record the answer in the job's first decision line.
-- If it is not linked, say at intake that the job lives only in this session, and offer to save it to Google Drive or to his computer once linked. A proper home (the studio control room) comes in 0.3.0.
+The studio's home machine is Tim's Mac mini. It holds the jobs, this plugin's repo (`~/Github Projects/creative-studio`) and Blender with its GPU, and it stays on.
+
+- **Default:** `~/Studio/jobs/<client>-<job>` on the Mac mini. In a session linked to it, that folder appears as `$HOME/mnt/jobs` in the device shell. Open, edit and run jobs there; do not copy them into the cloud workspace except for a step the Mac mini cannot do, and write the results back.
+- **Mac mini not reachable** (asleep, offline, or the session is not linked): say so at intake. Offer to wait, or to start the job in this session and move it to `~/Studio/jobs` as soon as the Mac mini is back. Never leave a job living only in a cloud session.
 - Never put client jobs inside the plugin repo.
+- Back-ups of `~/Studio/jobs` are Tim's (Time Machine or a Drive sync). The control room in 0.3.0 adds a board that records every job's state.
 
 ## Data handling
 

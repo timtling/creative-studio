@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p ~/Studio/jobs)",
+      "Read(//Users/t/**)"
+    ]
+  }
+}

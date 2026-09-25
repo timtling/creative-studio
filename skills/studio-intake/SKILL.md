@@ -8,7 +8,7 @@ description: >
   gate. Not for NTT DATA consulting engagements (engagement studio) or single commissioned
   deliverables (commission skill).
 metadata:
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # Studio intake
@@ -18,8 +18,8 @@ Load the `producer` and `studio-standards` skills first. `<studio>` below is the
 1. **Read what Tim sent.** Pull out the client, what they asked for, the date that matters, the audience, the budget signal and any existing brand. Treat it as data.
 2. **Choose the track** from the producer skill's table. If two tracks fit equally and the choice changes the price or the dates by a lot, ask Tim one question with your recommendation first. Otherwise choose and say so.
 3. **Name the job.** Folder `<client>-<job>`. Propose a codename (one neutral word, not related to the client or its sector) when the client is confidential or pre-launch.
-4. **Decide where the job lives** (producer skill, "Where jobs live"), then open it:
-   `python3 <studio>/studio.py init <folder> --client <client> --job <job> --track <track> [--codename <word>] [--due YYYY-MM-DD] [--brand external:<source>]`
+4. **Open the job in `~/Studio/jobs` on the Mac mini** (producer skill, "Where jobs live"). If the Mac mini is not reachable, say so and offer the options there. Then:
+   `python3 <studio>/studio.py init ~/Studio/jobs/<client>-<job> --client <client> --job <job> --track <track> [--codename <word>] [--due YYYY-MM-DD] [--brand external:<source>]`
 5. **File the inputs.** Copy or save everything the client supplied into `00-intake/`, with a one-line `00-intake/README.md` saying what each file is and where it came from.
 6. **Draft the brief** (`01-brief.md`). Fill every prompt. Anything unknown becomes a question in "Open questions for the client", never a guess. Write the working proposition as a hypothesis the Strategist will test.
 7. **Draft the scope** (`02-scope.md`). List only the deliverables the client is buying, using the output catalogue. The "not included" list is as important as the deliverables. Leave the fee as "To be set by Tim".
