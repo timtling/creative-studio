@@ -123,6 +123,41 @@ def test_system_gate_needs_a_named_human_on_the_mark(job, tmp_path):
     assert problems() == []
 
 
+@pytest.mark.parametrize("who", [
+    "<name or role>", "[Name]", "{{who}}", "TODO", "TBC", "xxx",
+    "the identity designer", "Identity designer (role)", "our copywriter",
+    "Claude", "the agent", "AI", "a designer", "someone",
+])
+def test_a_placeholder_or_a_role_is_not_a_named_human(who):
+    """The check protects the client's rights in the mark: a template's own
+    example, or the role that prepared the master, must never satisfy it."""
+    assert not st._person_name(who)
+
+
+@pytest.mark.parametrize("who", ["Tim Ling", "Tim", "Jo", "J. Ainsworth", "Aoife Ni Bhriain",
+                                 "Mary-Jane O'Connor"])
+def test_a_real_name_passes(who):
+    assert st._person_name(who)
+
+
+def test_placeholder_in_the_log_does_not_open_the_system_gate(job, tmp_path):
+    """Regression: the first version accepted any text after 'refined by:', so a
+    format example left in the log opened the gate."""
+    (job / "30-identity" / "marks.md").write_text("x")
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    log = job / "30-identity" / "refinement-log.md"
+    problems = lambda: [x for x in st.readiness(job, st.load(job), "system") if "refinement-log" in x]
+
+    log.write_text("- 2026-10-05 · v1 · refined by: Identity designer · derived the mark\n"
+                   "- 2026-10-06 · v2 · refined by: <name or role> · <what changed and why>\n")
+    assert any("names no person" in p for p in problems())
+    assert any("<name or role>" in p for p in problems()), "the message should name what it found"
+
+    log.write_text(log.read_text().replace("<name or role> · <what changed and why>",
+                                           "Tim Ling · kerned the wordmark; the S was tight"))
+    assert problems() == []
+
+
 def test_identity_check_is_tied_to_the_stage_not_the_gate_name(tmp_path, monkeypatch):
     """product-ui has a system gate too, but it closes screens: no mark, no log needed."""
     monkeypatch.delenv("STUDIO_JOB", raising=False)

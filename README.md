@@ -81,7 +81,7 @@ Only needed when generated imagery comes back into scope.
 ## Development
 
 ```
-python3 -m pytest tests -q     # 63 tests
+python3 -m pytest tests -q     # 84 tests
 tools/package.sh               # runs the tests, builds dist/creative-studio.plugin
 ```
 

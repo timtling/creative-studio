@@ -205,11 +205,37 @@ def nonempty(d: Path) -> bool:
 # the master; it does not sign for the pass that makes the mark final.
 REFINED_BY = re.compile(r"^[ \t]*[-*][ \t].*?\brefined by:[ \t]*([^\n|·]+)", re.I | re.M)
 NOT_A_PERSON = {
-    "", "tbc", "tbd", "n/a", "na", "none", "nobody", "unknown", "pending",
-    "ai", "claude", "the agent", "agent", "the model", "model", "the studio", "studio",
-    "identity designer", "the identity designer", "identity-designer", "art director",
-    "the art director", "art-director", "producer", "the producer",
+    "", "tbc", "tbd", "todo", "xxx", "n/a", "na", "none", "nobody", "unknown", "pending",
+    "ai", "claude", "claude code", "assistant", "the assistant", "llm", "the agent", "agent",
+    "the model", "model", "the studio", "studio", "the team", "team", "someone", "somebody",
+    "a designer", "the designer", "designer", "a human", "the human", "human", "person",
+    "identity designer", "art director", "creative lead", "strategist", "copywriter",
+    "product designer", "builder", "delivery", "producer", "panel",
 }
+# Words that give a placeholder away even inside a longer string.
+PLACEHOLDER_WORDS = {"name", "names", "role", "roles", "initials", "placeholder", "example",
+                     "todo", "tbc", "tbd", "xxx", "anon", "anonymous", "redacted"}
+
+
+def _person_name(raw: str) -> bool:
+    """Is this the name of a person, rather than a placeholder or a role?
+
+    The log is what supports the client's rights in the mark later, so the bar is
+    a name somebody could be held to. A template's own example must not satisfy it.
+    """
+    if any(c in raw for c in "<>[]{}|"):      # `<name>`, `[Name]`, `{{who}}`
+        return False
+    n = re.sub(r"\([^)]*\)", " ", raw)        # drop "(role)", "(agent)" and the like
+    n = re.sub(r"[^A-Za-z' -]", " ", n)       # drop digits and punctuation
+    n = re.sub(r"\s+", " ", n).strip().lower()
+    words = n.split()
+    if not words or len(n) < 2:          # 'Jo' and 'Al' are names; 'x' is not
+        return False
+    if n in NOT_A_PERSON or any(w in PLACEHOLDER_WORDS for w in words):
+        return False
+    # "the identity designer", "our copywriter": a role with an article or possessive.
+    stripped = " ".join(w for w in words if w not in {"the", "a", "an", "our", "my", "studio's"})
+    return stripped not in NOT_A_PERSON
 
 
 def human_refinement(job: Path) -> list[str]:
@@ -221,10 +247,10 @@ def human_refinement(job: Path) -> list[str]:
     names = [n.strip() for n in REFINED_BY.findall(p.read_text())]
     if not names:
         return [f"30-identity/refinement-log.md has no refinement entries; {how}"]
-    people = [n for n in names if n.lower().strip(" .") not in NOT_A_PERSON and len(n) > 2]
-    if not people:
+    if not any(_person_name(n) for n in names):
         return ["30-identity/refinement-log.md names no person for the final refinement: the mark's last pass is "
-                "done by a named human (Tim or a designer), not by the agent that prepared it"]
+                "done by a named human (Tim or a designer), not by the agent that prepared it, and not by a "
+                "placeholder or a role. Found: " + ", ".join(sorted({n for n in names})[:4])]
     return []
 
 

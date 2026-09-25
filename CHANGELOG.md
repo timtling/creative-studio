@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2 (25 Sep 2026)
+
+- The system gate's named-human check no longer accepts a placeholder or a role. It matched any text after `refined by:`, so `<name or role>`, `[Name]`, `TODO` and `the identity designer` all satisfied the check that exists to protect the client's rights in the mark. Found by the Identity designer on the first job to reach the identity stage: its own draft log contained a format example, the gate passed on it, and it reported the hole rather than working around it. Names are now normalised (parentheticals and punctuation dropped) and tested against placeholder syntax, placeholder words and every studio role, and the failure message quotes what it found. Two-letter given names still pass.
+
 ## 0.3.1 (25 Sep 2026)
 
 - Intake lists only the competitors the client named, in the client's words, marked unverified, and leaves the competitive landscape to the Strategist. Found on the first sprint: the Producer assembled a plausible set at intake, it was wrong in four ways, and it was inherited as fact until the Strategist verified it against live pages two stages later. The same rule now covers anything else the Producer might supply on the client's behalf: the market's shape, what the category says, who the real incumbent is. Those are strategy findings, not intake ones.
