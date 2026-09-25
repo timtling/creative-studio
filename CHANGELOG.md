@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 (25 Sep 2026)
+
+The four creative roles. A brand sprint now has someone to do every stage of it.
+
+- `strategist`: owns `10-strategy/`. Tests the brief's working proposition against a rival reading rather than adopting it, applies the competitor-swap test to its own positioning, and hands the Creative Lead the constraints the territories have to answer. Evidence is sourced, attributed or flagged; never manufactured.
+- `creative-lead`: owns `20-territories/`. Three different bets, each with a board that names its idea, what it gives up, its declared departures from the anti-generic list, its references and how it would fail. Boards are rendered and read on a phone before review. Literal colour values are allowed in territory boards, and only there, because the vault does not exist until the identity stage.
+- `copywriter`: owns `voice.md`, `naming.md` and every `*-copy.md`, wherever they sit, the one role that owns files rather than a folder. Voice before lines, the competitor-swap test on every line, copy judged in place at real length, and name screening recorded.
+- `identity-designer`: owns `30-identity/` and `vault/`. Marks tested at 16px, 32px and 512px, in one colour, reversed and on photography before discussion. Builds and validates the vault, and hands `swatches.html` to the Producer rather than publishing it. No generated image is ever a final mark: the agent constructs and prepares the master, and the pass that makes it final is made by a named human. `30-identity/refinement-log.md` records it, and `studio.py check system` will not pass without an entry naming a person. `originality.md` covers marks only; names are screened by the Copywriter, on every job.
+- Vault lint and hook skip `20-territories/` and `30-identity/exploration/`. Both are pre-vault by design, and a lint that cries wolf there is one everyone learns to ignore.
+- Producer roster names the agent to launch for each role, and how to brief one. The panel and the control room move to 0.4.0.
+- 63 tests.
+
 ## 0.2.1 (25 Sep 2026)
 
 - Jobs live on the Mac mini at `~/Studio/jobs` by default. The Producer says so at intake when the Mac mini cannot be reached, and never leaves a job living only in a cloud session.

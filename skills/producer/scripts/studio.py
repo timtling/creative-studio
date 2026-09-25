@@ -201,6 +201,33 @@ def nonempty(d: Path) -> bool:
     return d.exists() and any(f.is_file() and not f.name.startswith(".") for f in d.rglob("*"))
 
 
+# A final mark is refined by a named human, and the log says who. The agent prepares
+# the master; it does not sign for the pass that makes the mark final.
+REFINED_BY = re.compile(r"^[ \t]*[-*][ \t].*?\brefined by:[ \t]*([^\n|·]+)", re.I | re.M)
+NOT_A_PERSON = {
+    "", "tbc", "tbd", "n/a", "na", "none", "nobody", "unknown", "pending",
+    "ai", "claude", "the agent", "agent", "the model", "model", "the studio", "studio",
+    "identity designer", "the identity designer", "identity-designer", "art director",
+    "the art director", "art-director", "producer", "the producer",
+}
+
+
+def human_refinement(job: Path) -> list[str]:
+    """The identity stage is not ready until a person has signed the refinement log."""
+    p = job / STAGE_DIRS["identity"] / "refinement-log.md"
+    how = ("add a line per pass: `- <date> · v<n> · refined by: <full name> · <what changed and why>`")
+    if not p.exists():
+        return [f"30-identity/refinement-log.md is missing; {how}"]
+    names = [n.strip() for n in REFINED_BY.findall(p.read_text())]
+    if not names:
+        return [f"30-identity/refinement-log.md has no refinement entries; {how}"]
+    people = [n for n in names if n.lower().strip(" .") not in NOT_A_PERSON and len(n) > 2]
+    if not people:
+        return ["30-identity/refinement-log.md names no person for the final refinement: the mark's last pass is "
+                "done by a named human (Tim or a designer), not by the agent that prepared it"]
+    return []
+
+
 def vault_ok(job: Path, data: dict) -> list[str]:
     if data.get("brand_source", "vault") != "vault":
         return []
@@ -241,6 +268,8 @@ def readiness(job: Path, data: dict, gate: str) -> list[str]:
             problems.append(f"{len(terr)} territories found in {d.name}/; the studio presents three (T1, T2, T3)")
         if not nonempty(job / STAGE_DIRS["strategy"]):
             problems.append("10-strategy/ is empty; territories must answer the positioning")
+    if stage == "identity":
+        problems += human_refinement(job)
     if gate in ("system", "final", "governance"):
         problems += vault_ok(job, data)
     return problems

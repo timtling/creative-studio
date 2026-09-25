@@ -7,7 +7,7 @@ description: >
   conventions. Every studio agent and every panel lens loads it. Also use it when Tim asks to "check this
   against the studio standards", "is this generic" or "does this meet the bar".
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Studio standards
@@ -27,7 +27,7 @@ The bar is a studio a client hires because its in-house work is competent but in
 
 ## Anti-generic list
 
-`references/anti-generic.md` lists the visual and verbal defaults the studio does not ship unless a declared departure argues for them. Check work against it before any gate. The panel's Creative and Craft lenses use it.
+`references/anti-generic.md` lists the visual and verbal defaults the studio does not ship unless a declared departure argues for them. Check work against it before any gate. The panel's Creative and Craft lenses use it from 0.4.0; until then the Creative Lead and the Producer check against it before every gate.
 
 ## Craft standards
 
@@ -51,8 +51,8 @@ The bar is a studio a client hires because its in-house work is competent but in
 
 - References are described and linked in boards. They are never traced, and they are never fed to a generator as something to imitate.
 - No living artist's name, brand, trademark, character or real person in any generation prompt (see the `image-generation` skill).
-- Every selected mark, name and key visual gets an originality check before the system gate: a reverse image search on marks, and web and trademark-register searches on names. Record what was checked in the board. Screening is not clearance; counsel clears names and marks.
-- Final marks are human-directed and human-refined, and that refinement is recorded (who changed what, and why) in `30-identity/`.
+- Every selected mark, name and key visual gets an originality check before the system gate: the Identity designer reverse image searches marks in `30-identity/originality.md`, and the Copywriter runs web and trademark-register searches on names in `naming.md`. Record what was checked. Screening is not clearance; counsel clears names and marks.
+- Final marks are human-directed throughout. An agent constructs and prepares the master; the pass that makes it final is made by a named human, and `30-identity/refinement-log.md` records who did what, and why, version by version. `studio.py check system` will not pass without an entry naming a person, and a name written there for a pass that did not happen is a fabrication, not a formality.
 
 ## Files
 

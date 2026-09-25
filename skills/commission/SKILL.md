@@ -33,7 +33,7 @@ From the engagement studio, the brand is usually the NTT DATA identity: `--brand
 2. Copy the request into `00-intake/commission.md` and fill every prompt. Copy the requester's own words where they exist.
 3. Brief gate: when the requester's brief is complete and Tim has already approved it on their side (for example at an engagement studio gate), record `studio.py gate record brief --status skipped --note "Approved by requester: <where>"`. Otherwise raise it to Tim as normal.
 4. Make the deliverable with the owning role. Use the Art Director for imagery and 3D. The studio's standards apply in full, except that the external brand overrides the studio's taste where the two conflict.
-5. Review against the acceptance criteria and `studio-standards` (the panel from 0.3.0), then raise the final gate to Tim.
+5. Review against the acceptance criteria and `studio-standards` (the panel from 0.4.0), then raise the final gate to Tim.
 6. Return exactly what was asked for, where it was asked for, plus a short note covering what it is, the decisions made, provenance (from the image ledger if any imagery was generated) and any limits. Close the job.
 
 ## Boundaries

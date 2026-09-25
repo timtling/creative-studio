@@ -7,7 +7,7 @@ description: >
   phone-readable gate pack, records Tim's decision, turns his changes into instructions for the owning
   roles, and starts the next stage. Engagement studio gates (A, B, C) use the engagement studio instead.
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Studio gate
@@ -22,7 +22,7 @@ Load the `producer` skill first. `<studio>` below is its `scripts/` folder.
    - **Decision needed**: one sentence.
    - **Recommendation**: the team's view and why, naming the option.
    - **What is in the pack**: links to artifacts (boards, the vault page, contact sheets, prototypes), one line each.
-   - **Panel**: the verdict and anything escalated. Until the panel exists (0.3.0), say the review was the Producer's only.
+   - **Panel**: the verdict and anything escalated. Until the panel exists (0.4.0), say the review was the Producer's only.
    - **Trade-offs and risks**: what this choice gives up.
    - **Questions**: at most three.
 4. Send Tim the pack, as a message with the links. Publish visual work as artifacts so it opens on his phone.
@@ -48,4 +48,4 @@ Record his words verbatim in the note. `90-decisions.md` is the job's memory: th
 
 ## After approval
 
-Say what starts next, who owns it and when the next gate is due (from `03-plan.md`). Then start it. For client-facing gates, prepare the client version of the work: same content, the studio's presentation, no internal notes, no panel findings.
+Say what starts next, who owns it and when the next gate is due (from `03-plan.md`). Then start it: launch the owning agent from the roster (`strategist`, `creative-lead`, `copywriter`, `identity-designer`, `art-director`) with the job folder, the files it needs and the gate it is working towards. If the owning role is not built yet, say which one is missing rather than doing its work in your own voice. For client-facing gates, prepare the client version of the work: same content, the studio's presentation, no internal notes, no panel findings.

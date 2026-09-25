@@ -311,6 +311,22 @@ def lint_text(text: str, suffix: str, allowed: set[str]) -> list[tuple[int, str,
     return issues
 
 
+def lint_skip(f: Path) -> bool:
+    """Files the lint has no business in.
+
+    The vault's own build output is the source of the tokens, and two places in a
+    job are pre-vault by design: territory boards are made before the vault exists,
+    and mark exploration is drawing, not deliverable. Literal values there are
+    expected, so flagging them trains everyone to ignore the lint.
+    """
+    parts = f.parts
+    if "vault" in parts or f.name == "tokens.css":
+        return True
+    if "20-territories" in parts:
+        return True
+    return any(a == "30-identity" and b == "exploration" for a, b in zip(parts, parts[1:]))
+
+
 def lint_files(files: list[Path], vault: Path) -> dict[str, list]:
     tree = load(vault)
     res = resolve(flatten(tree))
@@ -319,7 +335,7 @@ def lint_files(files: list[Path], vault: Path) -> dict[str, list]:
     for f in files:
         if f.suffix.lower() not in LINT_EXT or not f.exists():
             continue
-        if "vault" in f.parts or f.name == "tokens.css":
+        if lint_skip(f):
             continue
         issues = lint_text(f.read_text(errors="replace"), f.suffix.lower(), allowed)
         if issues:
@@ -406,7 +422,7 @@ def cmd_hook_lint(_a) -> int:
     f = Path(fp)
     if not f.is_absolute():
         f = Path(h.get("cwd") or ".") / f
-    if f.suffix.lower() not in LINT_EXT:
+    if f.suffix.lower() not in LINT_EXT or lint_skip(f):
         return 0
     job = find_job(f)
     if job is None:

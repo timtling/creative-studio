@@ -114,6 +114,37 @@ def test_lint(tmp_path):
     assert [i[1] for i in res[str(mark)]] == ["#FF00FF"]
 
 
+def test_lint_skips_the_pre_vault_stages(tmp_path):
+    """Territory boards and mark exploration are made before the vault exists."""
+    v = filled(tmp_path)
+    job = v.parent
+    literal = '<style>.a{color:#FF00FF}</style>'
+    made = {}
+    for rel in ("20-territories/T1/board.html", "30-identity/exploration/route-a.svg",
+                "30-identity/mark/lockup.svg", "50-applications/index.html"):
+        f = job / rel
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text('<svg><path fill="#FF00FF"/></svg>' if f.suffix == ".svg" else literal)
+        made[rel] = f
+    res = vt.lint_files(list(made.values()), v)
+    flagged = {rel for rel, f in made.items() if str(f) in res}
+    assert flagged == {"30-identity/mark/lockup.svg", "50-applications/index.html"}
+    assert vt.lint_skip(made["20-territories/T1/board.html"])
+    assert not vt.lint_skip(job / "30-identity" / "system.md")
+
+
+def test_hook_lint_is_quiet_in_the_pre_vault_stages(tmp_path):
+    v = filled(tmp_path)
+    job = v.parent
+    (job / "studio-job.json").write_text(json.dumps({"brand_source": "vault"}))
+    f = job / "20-territories" / "T2" / "board.html"
+    f.parent.mkdir(parents=True)
+    f.write_text(".hero{background:#123456}")
+    payload = json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(f)}, "cwd": str(job)})
+    r = subprocess.run([sys.executable, str(SCRIPT), "hook-lint"], input=payload, capture_output=True, text=True)
+    assert r.stdout == ""
+
+
 def test_hook_lint(tmp_path):
     v = filled(tmp_path)
     job = v.parent

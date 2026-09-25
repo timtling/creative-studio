@@ -8,7 +8,7 @@ description: >
   client revision rounds, change requests, commissions and data handling. Load it before any studio stage
   skill acts. It does not apply to NTT DATA consulting engagements, which run through the engagement studio.
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
 ---
 
 # Producer
@@ -38,23 +38,25 @@ If the ask does not fit one track, pick the nearest and change the deliverables 
 | Role | Owns | Available |
 |---|---|---|
 | Producer (you, the main session) | `01-brief.md`, `02-scope.md`, `03-plan.md`, `gates/`, `90-decisions.md`, `90-feedback.jsonl`, the job file | 0.2.0 |
-| Art Director (agent) | `assets/`, art direction, shot list, contact sheet, provenance | 0.1.0 |
-| Strategist | `10-strategy/` | 0.4.0 |
-| Creative Lead | `20-territories/` | 0.4.0 |
-| Copywriter | copy decks and naming inside the stage folders | 0.4.0 |
-| Identity designer | `30-identity/`, `vault/` | 0.4.0 |
+| Art Director (`art-director`) | `assets/`, art direction, shot list, contact sheet, provenance | 0.1.0 |
+| Strategist (`strategist`) | `10-strategy/` | 0.3.0 |
+| Creative Lead (`creative-lead`) | `20-territories/` | 0.3.0 |
+| Copywriter (`copywriter`) | `voice.md`, `naming.md` and `*-copy.md`, wherever they sit | 0.3.0 |
+| Identity designer (`identity-designer`) | `30-identity/`, `vault/` | 0.3.0 |
 | Product designer | `20-flows/`, `30-screens/`, `40-prototype/` | later |
 | Builder | `50-applications/`, `50-make/` | later |
 | Delivery | `99-handover/`, `99-return/` | later |
-| Panel (seven lenses) | findings only, never edits | 0.3.0 |
+| Panel (seven lenses) | findings only, never edits | 0.4.0 |
 
-Other roles propose changes to a file; the owner makes them. Until a role is built, do not quietly do its work in your own voice. Tell Tim which role is missing, and draft its work only if he asks, labelled "Producer draft, not reviewed".
+The names in brackets are the agents to launch. Other roles propose changes to a file; the owner makes them. Until a role is built, do not quietly do its work in your own voice. Tell Tim which role is missing, and draft its work only if he asks, labelled "Producer draft, not reviewed".
+
+Brief an agent with the job folder, the files it needs and nothing else. Name the stage, the gate it is working towards and the date. Agents do not talk to Tim or the client: they report to you, and you decide what reaches a gate pack. Independent work runs in parallel: the Copywriter's voice work and the Creative Lead's boards can run together once the positioning is in.
 
 ## The job
 
 1. **Intake** (`studio-intake`): choose the track, open the job, copy the client's material into `00-intake/`, draft the brief and scope, plan the stages, raise the brief gate.
 2. **Each stage**: brief the owning agents with the files they need and nothing else. Run independent work in parallel. When the stage's work is in, check readiness with `studio.py check <gate>`.
-3. **Review**: from 0.3.0 the panel runs before every gate. Until then, check the work against `studio-standards` yourself and say so in the gate pack.
+3. **Review**: from 0.4.0 the panel runs before every gate. Until then, check the work against `studio-standards` yourself and say so in the gate pack.
 4. **Gate** (`studio-gate`): raise it, compose the pack, send it to Tim, record his decision, propagate his changes, start the next stage.
 5. **Client rounds**: after Tim approves, the work goes to the client. Each consolidated set of client feedback is one round: `studio.py round <gate>`. When the allowance is used, further rounds are change requests.
 6. **Handover**: Delivery packages the final files (from 0.4.0 onwards); you close the job with `studio.py set-active <folder> no`.
@@ -82,7 +84,7 @@ The studio's home machine is Tim's Mac mini. It holds the jobs, this plugin's re
 - **Default:** `~/Studio/jobs/<client>-<job>` on the Mac mini. In a session linked to it, that folder appears as `$HOME/mnt/jobs` in the device shell. Open, edit and run jobs there; do not copy them into the cloud workspace except for a step the Mac mini cannot do, and write the results back.
 - **Mac mini not reachable** (asleep, offline, or the session is not linked): say so at intake. Offer to wait, or to start the job in this session and move it to `~/Studio/jobs` as soon as the Mac mini is back. Never leave a job living only in a cloud session.
 - Never put client jobs inside the plugin repo.
-- Back-ups of `~/Studio/jobs` are Tim's (Time Machine or a Drive sync). The control room in 0.3.0 adds a board that records every job's state.
+- Back-ups of `~/Studio/jobs` are Tim's (Time Machine or a Drive sync). The control room in 0.4.0 adds a board that records every job's state.
 
 ## Data handling
 

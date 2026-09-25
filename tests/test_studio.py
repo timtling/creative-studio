@@ -28,6 +28,13 @@ def fill(p: Path):
     p.write_text(st.MARKER.sub("Filled.", p.read_text()))
 
 
+def sign(job, who="Tim Ling"):
+    """The named human's final refinement pass on the mark."""
+    (job / "30-identity").mkdir(exist_ok=True)
+    (job / "30-identity" / "refinement-log.md").write_text(
+        f"- 2026-10-06 · v4 · refined by: {who} · raised the crossbar; it filled in at 16px\n")
+
+
 def approve(job, gate):
     assert st.main(["gate", "raise", gate, "--job", str(job)]) == 0
     assert st.main(["gate", "record", gate, "--status", "approved", "--job", str(job)]) == 0
@@ -92,7 +99,38 @@ def test_order_territories_and_vault(job, tmp_path):
     assert any("vault/tokens.json is missing" in p for p in st.readiness(job, st.load(job), "system"))
     v = filled(tmp_path / "v")
     (job / "vault" / "tokens.json").write_text((v / "tokens.json").read_text())
+    sign(job)
     assert st.readiness(job, st.load(job), "system") == []
+
+
+def test_system_gate_needs_a_named_human_on_the_mark(job, tmp_path):
+    """The agent prepares the master; a person makes the final pass and the log says who."""
+    log = job / "30-identity" / "refinement-log.md"
+    problems = lambda: [x for x in st.readiness(job, st.load(job), "system") if "refinement-log" in x]
+    (job / "30-identity" / "marks.md").write_text("x")
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+
+    assert any("refinement-log.md is missing" in p for p in problems())
+
+    log.write_text("# Refinement\n\nWe refined the mark a lot.\n")
+    assert any("no refinement entries" in p for p in problems()), "prose is not a log"
+
+    log.write_text("- 2026-10-05 · v2 · refined by: the agent · thinned the crossbar\n"
+                   "- 2026-10-05 · v3 · refined by: TBC · closed the counter\n")
+    assert any("names no person" in p for p in problems()), "the agent cannot sign for the final pass"
+
+    log.write_text(log.read_text() + "- 2026-10-06 · v4 · refined by: Tim Ling · raised the crossbar; it filled in at 16px\n")
+    assert problems() == []
+
+
+def test_identity_check_is_tied_to_the_stage_not_the_gate_name(tmp_path, monkeypatch):
+    """product-ui has a system gate too, but it closes screens: no mark, no log needed."""
+    monkeypatch.delenv("STUDIO_JOB", raising=False)
+    j = tmp_path / "ui"
+    assert st.main(["init", str(j), "--client", "Tessel", "--job", "Product UI", "--track", "product-ui"]) == 0
+    (j / "30-screens" / "screens.md").write_text("x")
+    (j / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    assert not any("refinement-log" in p for p in st.readiness(j, st.load(j), "system"))
 
 
 def test_rework_and_decisions_log(job):

@@ -18,7 +18,7 @@ Written for a phone. Keep it under one screen of reading before the links.
 
 ## Panel
 
-{{From 0.3.0: the panel's verdict, open Blockers and Majors, and anything escalated. Until the panel exists, write "Panel not yet in place; internal review by the Producer only."}}
+{{From 0.4.0: the panel's verdict, open Blockers and Majors, and anything escalated. Until the panel exists, write "Panel not yet in place; internal review by the Producer only."}}
 
 ## Trade-offs and risks
 

@@ -7,7 +7,7 @@ description: >
   Identity designer owns the vault; every other role reads from it. It covers the token structure,
   vault.py commands, the rules for referencing tokens, and working with an external brand.
 metadata:
-  version: "0.2.0"
+  version: "0.3.0"
 ---
 
 # Brand vault
@@ -52,6 +52,16 @@ vault.py lint --vault <job>/vault <files>    # literal colours that bypass the v
 ```
 
 A plugin hook runs the lint after every write to an HTML, CSS, SVG or script file inside a job, and reports literal colours back to the agent. In HTML and CSS, reference `var(--token)`. In standalone SVG files, literal fills are allowed only when they exactly match a vault colour.
+
+The lint and the hook skip three places, because literal values there are correct rather than sloppy:
+
+| Skipped | Why |
+|---|---|
+| `vault/` and any `tokens.css` | The vault is where the values live |
+| `20-territories/` | Territory boards are made before the vault exists |
+| `30-identity/exploration/` | Mark exploration is drawing, not a deliverable |
+
+Everything else in a job references tokens. A lint that cries wolf in the pre-vault stages is a lint everyone learns to ignore.
 
 ## The tokens page
 
