@@ -7,7 +7,7 @@ description: >
   conventions. Every studio agent and every panel lens loads it. Also use it when Tim asks to "check this
   against the studio standards", "is this generic" or "does this meet the bar".
 metadata:
-  version: "0.3.5"
+  version: "0.3.6"
 ---
 
 # Studio standards
@@ -18,14 +18,17 @@ The bar is a studio a client hires because its in-house work is competent but in
 
 1. **Brief before pixels.** No design work until the brief gate is approved. A commission's brief can be approved on the requester's side.
 2. **Diverge, then converge.** Territories are three different strategic bets, each with its own idea, not three colourways of one idea. If two territories could share a logo, they are one territory.
-3. **Tokens, not values.** Every colour, font, size, space, radius and motion value comes from the brand vault. The vault lint flags literal values in deliverables.
-4. **Render before review.** Work is judged as rendered output in context (on a phone, on a dark background, at 16px, on a billboard), never as source.
-5. **One owner per file.** Others propose; the owner edits.
-6. **Declared departures.** A territory may break a rule here, including the anti-generic list, only if the board names the rule and argues why breaking it serves the idea.
-7. **Client isolation.** Nothing crosses between clients: no reused concepts, styles, names or references from another job.
-8. **Human at every gate.** Nothing client-facing leaves without Tim's approval.
+3. **Reach on at least one.** One of the three territories is a **reach**: it draws explicitly on art practice — depth, colour, texture, atypical shape and form — from `references/art-sources.md`, and it still answers the positioning. A reach that does not answer the positioning is not a reach, it is a different job. **Three territories inside one narrow band of restraint is a Major finding: timidity.** It lands on the Creative Lead, and from 0.4.0 the panel's Creative lens looks for it. Restraint is a strategy when it is argued and a default when it is not.
+4. **Tokens, not values.** Every colour, font, size, space, radius and motion value comes from the brand vault. The vault lint flags literal values in deliverables.
+5. **Render before review.** Work is judged as rendered output in context (on a phone, on a dark background, at 16px, on a billboard), never as source.
+6. **One owner per file.** Others propose; the owner edits.
+7. **Declared departures.** A territory may break a rule here, including the anti-generic list, only if the board names the rule and argues why breaking it serves the idea.
+8. **Client isolation.** Nothing crosses between clients: no reused concepts, styles, names or references from another job.
+9. **Human at every gate.** Nothing client-facing leaves without Tim's approval.
 
 ## Anti-generic list
+
+`references/art-sources.md` is where to reach when the work is going polite: art practice as principles, and five studios whose work sets the bar — bold and systemic at once. Principles are cited and linked on the board. Nothing is copied, nothing is named in a generation prompt, and no territory is pitched as "like Studio X".
 
 `references/anti-generic.md` lists the visual and verbal defaults the studio does not ship unless a declared departure argues for them. Check work against it before any gate. The panel's Creative and Craft lenses use it from 0.4.0; until then the Creative Lead and the Producer check against it before every gate.
 
@@ -52,6 +55,21 @@ The bar is a studio a client hires because its in-house work is competent but in
 | applications | Builder, Art Director | Build only the 3D the direction gate approved. New 3D at this stage is a change request. |
 
 The `blender-3d` skill does the making. Renders are judged at the distance the object is actually seen from, never at 100% on a monitor.
+
+## The expression budget
+
+Expression is not spread evenly across a brand. The brief says where it lives and where it does not, and every role works to that line.
+
+| | Expression lives here | Expression stays out |
+|---|---|---|
+| Typical surfaces | Covers, heroes, campaigns, packaging, environments, launch moments | Forms, tables, data, body copy, settings, error states |
+
+**The default dial, which Tim adjusts per job:**
+
+- **Start-ups: bold throughout.** They are fighting to be noticed and have no legacy to protect. A calm working surface on a start-up brand usually means nobody decided what it should be.
+- **Corporates: bold in brand moments, calm in working surfaces.** The report, the form and the table are where the organisation's competence is judged, and the campaign is where its character is.
+
+The brief records the dial and names the surfaces on both sides of the line, so the Builder and the Identity designer are not guessing, and so "make it pop" and "tone it down" arrive as a decision rather than as taste. **The line is never drawn through accessibility**: every contrast rule holds on both sides of it, and expression never buys itself a readability exemption.
 
 ## Craft standards
 

@@ -3,84 +3,251 @@
   "color": {
     "$type": "color",
     "$description": "Primitives. The only place raw colour values live. Name by role in the palette, not by use.",
-    "ink": { "$value": null, "$description": "Darkest brand neutral, used for text" },
-    "paper": { "$value": null, "$description": "Lightest brand neutral, used for surfaces" },
-    "mid": { "$value": null, "$description": "Mid neutral for muted text and lines; check contrast on paper" },
-    "line": { "$value": null, "$description": "Hairline neutral for borders" },
-    "signal": { "$value": null, "$description": "The brand's primary accent" },
-    "support": { "$value": null, "$description": "Secondary accent" }
+    "ink": {
+      "$value": null,
+      "$description": "Darkest brand neutral, used for text"
+    },
+    "paper": {
+      "$value": null,
+      "$description": "Lightest brand neutral, used for surfaces"
+    },
+    "mid": {
+      "$value": null,
+      "$description": "Mid neutral for muted text and lines; check contrast on paper"
+    },
+    "line": {
+      "$value": null,
+      "$description": "Hairline neutral for borders"
+    },
+    "signal": {
+      "$value": null,
+      "$description": "The brand's primary accent"
+    },
+    "support": {
+      "$value": null,
+      "$description": "Secondary accent"
+    }
   },
   "text": {
     "$type": "color",
-    "default": { "$value": "{color.ink}" },
-    "muted": { "$value": "{color.mid}" },
-    "inverse": { "$value": "{color.paper}" }
+    "default": {
+      "$value": "{color.ink}"
+    },
+    "muted": {
+      "$value": "{color.mid}"
+    },
+    "inverse": {
+      "$value": "{color.paper}"
+    }
   },
   "surface": {
     "$type": "color",
-    "default": { "$value": "{color.paper}" },
-    "inverse": { "$value": "{color.ink}" }
+    "default": {
+      "$value": "{color.paper}"
+    },
+    "inverse": {
+      "$value": "{color.ink}"
+    }
   },
   "border": {
     "$type": "color",
-    "default": { "$value": "{color.line}" }
+    "default": {
+      "$value": "{color.line}"
+    }
   },
   "accent": {
     "$type": "color",
-    "default": { "$value": "{color.signal}" },
-    "secondary": { "$value": "{color.support}" }
+    "default": {
+      "$value": "{color.signal}"
+    },
+    "secondary": {
+      "$value": "{color.support}"
+    }
   },
   "font": {
     "$type": "fontFamily",
-    "display": { "$value": null, "$description": "Licence must cover the client's uses; record it in the brand book" },
-    "body": { "$value": null },
-    "mono": { "$value": ["ui-monospace", "monospace"] }
+    "display": {
+      "$value": null,
+      "$description": "Licence must cover the client's uses; record it in the brand book"
+    },
+    "body": {
+      "$value": null
+    },
+    "mono": {
+      "$value": [
+        "ui-monospace",
+        "monospace"
+      ]
+    }
   },
   "weight": {
     "$type": "fontWeight",
-    "regular": { "$value": 400 },
-    "strong": { "$value": 600 }
+    "regular": {
+      "$value": 400
+    },
+    "strong": {
+      "$value": 600
+    }
   },
   "type": {
     "$type": "dimension",
     "$description": "Modular scale. State the ratio in the brand book.",
-    "caption": { "$value": null },
-    "body": { "$value": null },
-    "lead": { "$value": null },
-    "h3": { "$value": null },
-    "h2": { "$value": null },
-    "h1": { "$value": null },
-    "display": { "$value": null }
+    "caption": {
+      "$value": null
+    },
+    "body": {
+      "$value": null
+    },
+    "lead": {
+      "$value": null
+    },
+    "h3": {
+      "$value": null
+    },
+    "h2": {
+      "$value": null
+    },
+    "h1": {
+      "$value": null
+    },
+    "display": {
+      "$value": null
+    }
   },
   "space": {
     "$type": "dimension",
     "$description": "Base unit and multiples.",
-    "1": { "$value": "4px" },
-    "2": { "$value": "8px" },
-    "3": { "$value": "12px" },
-    "4": { "$value": "16px" },
-    "6": { "$value": "24px" },
-    "8": { "$value": "32px" },
-    "12": { "$value": "48px" },
-    "16": { "$value": "64px" }
+    "1": {
+      "$value": "4px"
+    },
+    "2": {
+      "$value": "8px"
+    },
+    "3": {
+      "$value": "12px"
+    },
+    "4": {
+      "$value": "16px"
+    },
+    "6": {
+      "$value": "24px"
+    },
+    "8": {
+      "$value": "32px"
+    },
+    "12": {
+      "$value": "48px"
+    },
+    "16": {
+      "$value": "64px"
+    }
   },
   "radius": {
     "$type": "dimension",
-    "none": { "$value": "0px" },
-    "sm": { "$value": null },
-    "md": { "$value": null }
+    "none": {
+      "$value": "0px"
+    },
+    "sm": {
+      "$value": null
+    },
+    "md": {
+      "$value": null
+    }
   },
   "motion": {
     "duration": {
       "$type": "duration",
-      "fast": { "$value": "120ms" },
-      "base": { "$value": "200ms" },
-      "slow": { "$value": "360ms" }
+      "fast": {
+        "$value": "120ms"
+      },
+      "base": {
+        "$value": "200ms"
+      },
+      "slow": {
+        "$value": "360ms"
+      }
     },
     "easing": {
       "$type": "cubicBezier",
-      "standard": { "$value": [0.2, 0, 0, 1] },
-      "exit": { "$value": [0.4, 0, 1, 1] }
+      "standard": {
+        "$value": [
+          0.2,
+          0,
+          0,
+          1
+        ]
+      },
+      "exit": {
+        "$value": [
+          0.4,
+          0,
+          1,
+          1
+        ]
+      }
+    }
+  },
+  "expressive": {
+    "$description": "The expressive layer. Built for the surfaces the brief's expression budget names (covers, heroes, campaigns, packaging, environments) and kept off the ones it does not (forms, tables, data, body copy). Nothing here overrides a contrast rule: expression does not buy a readability exemption. Leave a group empty rather than inventing one.",
+    "palette": {
+      "$type": "color",
+      "$description": "Extended palette beyond the functional primitives: the colours a campaign may use that a form may not. Each aliases a primitive in `color` or holds its own value, and each says where it is allowed.",
+      "1": {
+        "$value": null,
+        "$description": "Expressive colour 1. Say where it is allowed."
+      },
+      "2": {
+        "$value": null,
+        "$description": "Expressive colour 2."
+      },
+      "3": {
+        "$value": null,
+        "$description": "Expressive colour 3."
+      }
+    },
+    "texture": {
+      "$type": "other",
+      "$description": "Grain, overprint, paper, noise. NEVER behind body text: the lint enforces it. Texture sits behind display type, on covers and on large colour planes.",
+      "grain": {
+        "$value": null,
+        "$description": "e.g. a CSS gradient or an asset reference, with its opacity"
+      },
+      "overprint": {
+        "$value": null,
+        "$description": "Blend behaviour for two inks making a third"
+      }
+    },
+    "shape": {
+      "$type": "other",
+      "$description": "The shape library: the brand's own forms, as reusable parts rather than one-off drawings. Name by what the shape is, not where it was first used.",
+      "1": {
+        "$value": null,
+        "$description": "Shape 1: what it is, and how it may be scaled or rotated"
+      },
+      "2": {
+        "$value": null,
+        "$description": "Shape 2"
+      }
+    },
+    "gradient": {
+      "$type": "other",
+      "$description": "Gradients, stated as token stops rather than raw colours. A gradient carrying body text must pass contrast at its worst point, not its average.",
+      "1": {
+        "$value": null,
+        "$description": "e.g. linear-gradient(...) built from {expressive.palette.*}"
+      }
+    },
+    "depth": {
+      "$type": "other",
+      "$description": "Elevation, shadow and dimensional treatment. Depth carries meaning or it is decoration: say what each level means.",
+      "raised": {
+        "$value": null,
+        "$description": "What is raised, and why"
+      },
+      "recessed": {
+        "$value": null,
+        "$description": "What is recessed, and why"
+      }
     }
   }
 }

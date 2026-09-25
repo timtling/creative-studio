@@ -43,7 +43,7 @@ Load `studio-standards` and `brand-vault` before any work. Read `01-brief.md`, `
   - `originality.md`: the mark screening before the system gate. Reverse image search on the selected mark and its variants: what was searched, where, and what came back. Marks only. Names are the Copywriter's to screen, in `naming.md`, including any name that first appears in your lockups. Screening is not clearance; the client's counsel clears marks.
   - `system.md`: clear space, minimum sizes, the misuse list, and how the mark behaves on photography and on a dark surface.
   - `touchpoint-tests/`: a Blender mockup of every physical touchpoint in `10-strategy/touchpoints.md`, rendered at the distances that touchpoint is actually seen from, with a line on what each test changed. Load the `blender-3d` skill; build from `vault/build/blender.json` so the colours are the brand's rather than Blender's.
-- Everything in `vault/`, including `tokens.json`. You are the only role that edits it. Everyone else reads `build/`.
+- Everything in `vault/`, including `tokens.json`. You are the only role that edits it. Everyone else reads `build/`. That includes the **expressive layer** — extended palette, texture, shape, gradient and depth tokens — which is built for the surfaces the brief's expression budget names, and which never overrides a contrast rule.
 
 ## How you work
 

@@ -7,7 +7,7 @@ description: >
   Identity designer owns the vault; every other role reads from it. It covers the token structure,
   vault.py commands, the rules for referencing tokens, and working with an external brand.
 metadata:
-  version: "0.3.0"
+  version: "0.3.6"
 ---
 
 # Brand vault
@@ -38,8 +38,9 @@ Groups in `tokens.json`:
 | `type` | The type scale | State the ratio in the brand book |
 | `space`, `radius` | Spacing and corners | Everything spaces from this scale |
 | `motion` | Durations and easing | Reduced-motion variants live in the code, using the same tokens |
+| `expressive` | The expressive layer: extended palette, texture, shape, gradient, depth | **Optional.** Built for the surfaces the brief's expression budget names, and kept off the ones it does not. An unset slot is a decision, not an omission, so the vault validates without it; a filled one is type-checked like any other |
 
-`text.default` on `surface.default` must pass WCAG AA (4.5:1), or the vault does not validate.
+`text.default` on `surface.default` must pass WCAG AA (4.5:1), or the vault does not validate. **The expressive layer never overrides a contrast rule**: expression does not buy a readability exemption, and a gradient carrying body text must pass at its worst point rather than its average.
 
 ## Commands
 
@@ -62,6 +63,8 @@ The lint and the hook skip three places, because literal values there are correc
 | `30-identity/exploration/` | Mark exploration is drawing, not a deliverable |
 
 Everything else in a job references tokens. A lint that cries wolf in the pre-vault stages is a lint everyone learns to ignore.
+
+**The texture rule.** The lint also reports texture — grain, noise, overprint, repeating and conic gradients, image backgrounds — declared on a rule whose selector says the block holds running text (`p`, `li`, `td`, `.body`, `.copy`, `.entry` and the like). Texture behind body text destroys the contrast the vault's other rules exist to protect. Texture on a hero, a cover or a campaign panel is the point of the expressive layer and is not flagged.
 
 ## The tokens page
 

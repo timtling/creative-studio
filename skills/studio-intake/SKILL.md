@@ -8,7 +8,7 @@ description: >
   gate. Not for NTT DATA consulting engagements (engagement studio) or single commissioned
   deliverables (commission skill).
 metadata:
-  version: "0.3.4"
+  version: "0.3.6"
 ---
 
 # Studio intake
@@ -39,6 +39,7 @@ Load the `producer` and `studio-standards` skills first. `<studio>` below is the
    | 9 | Platform, and who maintains it | Whether the Builder ships production code or a template |
    | 10 | Confidentiality | Whether the job runs under a codename, and what may go to third-party tools |
    | 11 | Success measure | What the work is for, and what the final gate is judged against |
+   | 12 | Expression budget | How much range the territories are being asked for, and which surfaces stay calm |
 
    **`inferred` means you read it from what Tim sent and it needs confirming.** Never promote an inference to a fact by writing it into the brief. Competitors are only ever `supplied` or `missing`: the Producer does not assemble a competitive set, and a set invented at intake is inherited as fact by every role downstream.
 

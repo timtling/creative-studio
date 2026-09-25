@@ -28,6 +28,14 @@ Replace every prompt written in double braces. The brief gate will not raise whi
 
 {{What is fixed: the name (or not), legacy assets to keep, legal lines, languages, markets, accessibility level (WCAG AA by default).}}
 
+## Expression budget
+
+{{Where expression lives on this job, and where it does not. Name real surfaces on both sides, not categories: "the launch page hero, the campaign posters, the packaging" and "the booking form, the pricing table, the dashboard". Then state the dial and who set it.
+
+Default dial, which Tim adjusts per job: start-ups bold throughout, because they are fighting to be noticed and have no legacy to protect, and a calm working surface usually means nobody decided what it should be; corporates bold in brand moments and calm in working surfaces, because the report and the form are where competence is judged and the campaign is where character is.
+
+The line is never drawn through accessibility: every contrast rule holds on both sides of it.}}
+
 ## Constraints
 
 {{Budget band, dates the client cannot move, technical platforms (CMS, app stack), approval chain on the client side.}}

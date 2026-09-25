@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.6 (25 Sep 2026)
+
+Expressive range. The studio had rules against being generic and none against being timid.
+
+- **The reach rule.** At least one of the three territories draws explicitly on art practice — depth, colour, texture, atypical shape and form — and still answers the positioning. **Three territories inside one narrow band of restraint is a Major finding, and it is called timidity.** It lands on the Creative Lead and, from 0.4.0, on the panel's Creative lens. Argued restraint is a strategy; unargued restraint is a default wearing a strategy's clothes.
+- **`studio-standards/references/art-sources.md`.** Art practice as principles to take rather than looks to copy — Constructivism, Op art, Albers, Fauvism, Delaunay, arte povera, Bauhaus weaving, riso and overprint, Suprematism, Memphis, concrete poetry, brutalism — and five studio benchmarks studied on 25 Sep 2026: DIA, Studio Dumbar, Hey Studio, ManvsMachine and PORTO ROCHA. Each carries three to five principles tied to a specific linked project, with the quotes those projects actually publish. ManvsMachine's case pages would not open, and the file says so rather than inventing detail. Boards cite the principle and link the source; no project is imitated, no studio is named in a generation prompt, and no territory is pitched as "like Studio X".
+- **The expressive vault layer**, optional and beside the functional one: `expressive.palette`, `.texture`, `.shape`, `.gradient`, `.depth`. A job whose expression budget keeps every surface calm has nothing to put in it, so an unset slot validates; a filled one is type-checked like any other. **A new lint rule: texture never sits behind body text**, detected on the selector, so a hero or a cover is untouched and a `p`, `td` or `.body` is reported. Every contrast rule is unchanged.
+- **The expression budget** in the brief, the intake checklist and the Builder: where expression lives (covers, heroes, campaigns, packaging, environments) and where it does not (forms, tables, data, body copy). Default dial, adjusted per job: start-ups bold throughout, corporates bold in brand moments and calm in working surfaces. The line is never drawn through accessibility.
+- 159 tests.
+
 ## 0.3.5 (25 Sep 2026)
 
 3D gets a reason before it gets a renderer, and the effect check stops passing quietly.

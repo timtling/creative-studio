@@ -19,8 +19,11 @@ The brief gate will not raise until this file is complete and at least three que
 | 9 | Platform, and who maintains it | | |
 | 10 | Confidentiality | | |
 | 11 | Success measure | | |
+| 12 | Expression budget: where expression lives, and where it does not | | |
 
 **Status is one of:** `supplied` (the client or Tim said it), `inferred` (the Producer read it from what was sent, and it needs confirming), `missing` (nobody has said it).
+
+Item 12 starts from the default dial (start-ups bold throughout, corporates bold in brand moments and calm in working surfaces) and is `inferred` until Tim sets it, because it decides how much range the territories are being asked for.
 
 Competitors are only ever `supplied` or `missing`. The Producer does not assemble a competitive set: that is the Strategist's work, verified against live pages at the strategy stage.
 

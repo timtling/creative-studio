@@ -121,13 +121,27 @@ def colours(res: dict[str, dict]) -> dict[str, str]:
 
 # --------------------------------------------------------------------------- validation
 
+EXPRESSIVE = "expressive"
+
+
+def usable(toks: dict) -> dict:
+    """Tokens with a value, dropping the expressive layer's unset slots.
+
+    The expressive layer is optional by design: a job whose expression budget
+    keeps every surface calm has nothing to put in it, and an empty slot there
+    is a decision rather than an omission. Everything else must be filled.
+    """
+    return {p: t for p, t in toks.items()
+            if not (p.split(".", 1)[0] == EXPRESSIVE and t["value"] in (None, ""))}
+
+
 def validate(tree: dict) -> tuple[list[str], list[str]]:
     """(errors, warnings)."""
     errors, warnings = [], []
     for g in REQUIRED_GROUPS:
         if g not in tree:
             errors.append(f"missing required group '{g}'")
-    toks = flatten(tree)
+    toks = usable(flatten(tree))
     if not toks:
         return errors + ["no tokens defined"], warnings
     for p, t in toks.items():
@@ -212,7 +226,7 @@ def build(vault: Path) -> list[Path]:
     errors, _ = validate(tree)
     if errors:
         raise TokenError("vault does not validate:\n  " + "\n  ".join(errors))
-    toks = flatten(tree)
+    toks = usable(flatten(tree))
     res = resolve(toks)
     out = vault / "build"
     out.mkdir(exist_ok=True)
@@ -311,6 +325,42 @@ def lint_text(text: str, suffix: str, allowed: set[str]) -> list[tuple[int, str,
     return issues
 
 
+# Texture behind body text is the one expressive move that is always wrong: grain,
+# noise and overprint destroy the contrast the vault spends its rules protecting.
+TEXTURE_RE = re.compile(
+    r"(?P<prop>background(?:-image)?|mask-image)\s*:\s*(?P<val>[^;{}]*"
+    r"(?:url\(|repeating-linear-gradient|repeating-radial-gradient|conic-gradient|noise|grain|texture)"
+    r"[^;{}]*)", re.I)
+# Selectors and properties that say "this holds running text".
+BODY_TEXT_HINT = re.compile(
+    r"(^|[\s,>+~])(body|p|li|dd|dt|blockquote|article|main|figcaption|small|label|input|textarea|td|th)\b"
+    r"|\.(body|prose|copy|text|note|entry|paragraph|caption|legend)[\w-]*\b", re.I)
+
+
+def lint_texture(text: str, suffix: str) -> list[tuple[int, str, str]]:
+    """[(line, what, why)] for texture sitting behind running text.
+
+    Deliberately narrow: it reports a texture declared in a rule whose selector
+    says the block holds body text. A texture on a hero or a cover is the point
+    of the expressive layer and is not flagged.
+    """
+    if suffix not in (".css", ".html"):
+        return []
+    issues, selector, line_of_selector = [], "", 0
+    for i, line in enumerate(text.splitlines(), 1):
+        head = line.split("{", 1)
+        if len(head) > 1:
+            selector, line_of_selector = head[0].strip(), i
+        m = TEXTURE_RE.search(line)
+        if m and selector and BODY_TEXT_HINT.search(selector):
+            issues.append((i, m.group("val").strip()[:48],
+                           f"texture behind body text (selector `{selector[:40]}` on line {line_of_selector}); "
+                           "the expressive layer never sits under running text"))
+        if "}" in line:
+            selector = ""
+    return issues
+
+
 def lint_skip(f: Path) -> bool:
     """Files the lint has no business in.
 
@@ -329,7 +379,7 @@ def lint_skip(f: Path) -> bool:
 
 def lint_files(files: list[Path], vault: Path) -> dict[str, list]:
     tree = load(vault)
-    res = resolve(flatten(tree))
+    res = resolve(usable(flatten(tree)))
     allowed = set(colours(res).values())
     out = {}
     for f in files:
@@ -337,9 +387,10 @@ def lint_files(files: list[Path], vault: Path) -> dict[str, list]:
             continue
         if lint_skip(f):
             continue
-        issues = lint_text(f.read_text(errors="replace"), f.suffix.lower(), allowed)
+        body = f.read_text(errors="replace")
+        issues = lint_text(body, f.suffix.lower(), allowed) + lint_texture(body, f.suffix.lower())
         if issues:
-            out[str(f)] = issues
+            out[str(f)] = sorted(issues)
     return out
 
 
@@ -390,7 +441,7 @@ def cmd_build(a) -> int:
 
 
 def cmd_contrast(a) -> int:
-    rows = contrast_matrix(resolve(flatten(load(Path(a.vault)))))
+    rows = contrast_matrix(resolve(usable(flatten(load(Path(a.vault))))))
     if a.json:
         print(json.dumps(rows, indent=2))
         return 0
