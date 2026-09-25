@@ -9,6 +9,7 @@ An independent creative studio run by a team of agents. It takes brand, identity
 | 0.1.0 | Art Director agent; image generation on Recraft and Replicate with a provenance ledger, budget and licence guard rails (parked until needed) |
 | 0.2.0 | Producer workflow: five tracks, job set-up, planning, gates, client revision rounds, feedback triage, change requests, commissions. Studio standards and the anti-generic list. Brand vault: design tokens with validation, contrast checks, CSS, Blender and swatch-page builds, and a lint hook |
 | 0.3.0 | The four creative roles: Strategist, Creative Lead, Copywriter and Identity designer. The Producer now has someone to route every stage of a brand sprint to |
+| 0.3.4 | Intake is validated against an eleven-item checklist and at least three answered questions before the brief is drafted; the brief gate refuses to raise without it |
 | 0.3.3 | Builder and Delivery complete the roster, so a sprint runs intake to handover. The `studio-close` skill turns a finished job into an intervention log, a fix list and eval cases. The system gate refuses a person-attributed version that renders identically to the one before it |
 
 Next: 0.4.0, the seven-lens panel and a studio control room so jobs outlive a session, then one full Brand Sprint run end to end on a fictional start-up.
@@ -84,7 +85,7 @@ Only needed when generated imagery comes back into scope.
 ## Development
 
 ```
-python3 -m pytest tests -q     # 96 tests
+python3 -m pytest tests -q     # 105 tests
 tools/package.sh               # runs the tests, builds dist/creative-studio.plugin
 ```
 
@@ -97,7 +98,7 @@ agents/
   delivery.md  identity-designer.md  strategist.md
 hooks/hooks.json
 skills/
-  producer/            SKILL.md, scripts/studio.py, assets/templates/{brief,scope,gate-pack,commission}.md
+  producer/            SKILL.md, scripts/studio.py, assets/templates/{brief,scope,gate-pack,commission,validation}.md
   studio-intake/       SKILL.md
   studio-gate/         SKILL.md
   studio-close/        SKILL.md

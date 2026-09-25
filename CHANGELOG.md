@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.4 (25 Sep 2026)
+
+Mandatory intake validation, before a word of the brief is drafted.
+
+- An eleven-item checklist, each marked `supplied`, `inferred` or `missing`: client and decision-maker, what they are buying, the date and what it is tied to, audience, existing brand, budget band, competitors as the client named them, physical touchpoints, platform and who maintains it, confidentiality, success measure. An inference is confirmed with Tim, never promoted to a fact by being written into the brief.
+- At least three questions to Tim in one round of three or four, through `AskUserQuestion`, ordered by impact on track, scope, price and date, recommended option first, confirming the inferred rows rather than re-asking the supplied ones. A second round only for gaps that still block the track, the price or the date. Plain numbered questions where `AskUserQuestion` is unavailable.
+- Items only the client can answer go to a drafted client email and into the brief's open questions, rather than being put to Tim.
+- `studio.py init` writes `00-intake/validation.md` from a template, so the file exists from the first minute and is filled as intake happens. `studio.py check brief` refuses to raise without it, with unfilled prompts in it, or with fewer than three answered questions, and placeholders, "unanswered" and "TBC" do not count as answers.
+- Competitors stay client-named in the checklist, the template and the skill, matching 0.3.1.
+- 105 tests.
+
 ## 0.3.3 (25 Sep 2026)
 
 Everything in this release came out of the studio's first job.

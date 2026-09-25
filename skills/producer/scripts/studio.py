@@ -188,6 +188,7 @@ def rounds_table(track: str) -> str:
 # --------------------------------------------------------------------------- readiness
 
 MARKER = re.compile(r"\{\{[^}]*\}\}")
+MIN_INTAKE_ANSWERS = 3
 
 
 def unfilled(p: Path) -> list[str]:
@@ -195,6 +196,37 @@ def unfilled(p: Path) -> list[str]:
         return [f"{p.name} is missing"]
     marks = MARKER.findall(p.read_text())
     return [f"{p.name} still has {len(marks)} unfilled prompt(s), e.g. {marks[0]}"] if marks else []
+
+
+# An answer line in 00-intake/validation.md: `**A:** <what Tim said>`.
+ANSWERED = re.compile(r"^[ \t]*(?:[-*]|\d+\.)?[ \t]*\*\*A:\*\*[ \t]*(.+?)[ \t]*$", re.M)
+NO_ANSWER = {"unanswered", "not asked", "pending", "tbc", "tbd", "todo", "none", "n/a", "na", "-", "—"}
+
+
+def answered_questions(p: Path) -> list[str]:
+    """Answers in the validation file that actually say something."""
+    out = []
+    for a in ANSWERED.findall(p.read_text()):
+        a = a.strip()
+        if any(c in a for c in "<>{}") or a.lower().strip(" .") in NO_ANSWER or len(a) < 2:
+            continue
+        out.append(a)
+    return out
+
+
+def intake_validated(job: Path) -> list[str]:
+    """Intake is validated before a brief is drafted, not after it is written."""
+    p = job / "00-intake" / "validation.md"
+    if not p.exists():
+        return ["00-intake/validation.md is missing: validate the intake against the checklist and ask Tim at "
+                "least three questions before drafting the brief (see the studio-intake skill)"]
+    problems = unfilled(p)
+    answers = answered_questions(p)
+    if len(answers) < MIN_INTAKE_ANSWERS:
+        problems.append(f"00-intake/validation.md records {len(answers)} answered question(s); the brief gate needs "
+                        f"at least {MIN_INTAKE_ANSWERS}. Ask Tim the ones that change the track, the scope, the "
+                        "price or the date, and record his answers")
+    return problems
 
 
 def nonempty(d: Path) -> bool:
@@ -413,6 +445,7 @@ def readiness(job: Path, data: dict, gate: str) -> list[str]:
             problems.append(f"gate '{g}' is {data['gates'][g]['status']}; it must be approved first")
     stage = dict(t["gates"])[gate]
     if gate == "brief":
+        problems += intake_validated(job)
         for f in ("01-brief.md", "02-scope.md", "03-plan.md"):
             problems += unfilled(job / f)
         if data["track"] == "commission":
@@ -479,10 +512,13 @@ def cmd_init(a) -> int:
     (job / "01-brief.md").write_text(render("brief.md", vals))
     (job / "02-scope.md").write_text(render("scope.md", vals))
     (job / "90-decisions.md").write_text(f"# Decisions: {name}\n\nOne line per decision, newest last. Written by studio.py and the Producer.\n\n")
+    (job / "00-intake").mkdir(parents=True, exist_ok=True)
+    (job / "00-intake" / "validation.md").write_text(render("validation.md", vals))
     if a.track == "commission":
         (job / "00-intake" / "commission.md").write_text(render("commission.md", vals))
     log_decision(job, f"Job opened on the {t['label']} track (requester: {a.requester}{' / ' + a.requester_ref if a.requester_ref else ''}; brand source: {brand}).")
-    print(f"Initialised {job} ({t['label']}). Next: fill 01-brief.md and 02-scope.md, then `studio.py plan`.")
+    print(f"Initialised {job} ({t['label']}). Next: validate the intake in 00-intake/validation.md, "
+          "then fill 01-brief.md and 02-scope.md, then `studio.py plan`.")
     return 0
 
 

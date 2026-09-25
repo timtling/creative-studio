@@ -28,6 +28,18 @@ def fill(p: Path):
     p.write_text(st.MARKER.sub("Filled.", p.read_text()))
 
 
+def validate_intake(job, answers=3):
+    """Intake validation as the studio-intake skill leaves it."""
+    p = job / "00-intake" / "validation.md"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    if not p.exists():
+        p.write_text("# Intake validation\n")
+    fill(p)
+    body = p.read_text() + "\n## Questions asked\n\n" + "".join(
+        f"{i}. **Q:** Question {i}?\n   **A:** Tim's answer {i}.\n\n" for i in range(1, answers + 1))
+    p.write_text(body)
+
+
 def sign(job, who="Tim Ling"):
     """The named human's final refinement pass on the mark."""
     (job / "30-identity").mkdir(exist_ok=True)
@@ -36,6 +48,8 @@ def sign(job, who="Tim Ling"):
 
 
 def approve(job, gate):
+    if gate == "brief":
+        validate_intake(job)
     assert st.main(["gate", "raise", gate, "--job", str(job)]) == 0
     assert st.main(["gate", "record", gate, "--status", "approved", "--job", str(job)]) == 0
 
@@ -75,6 +89,7 @@ def test_brief_gate_needs_filled_documents(job):
     assert st.main(["gate", "raise", "brief", "--job", str(job)]) == 1
     fill(job / "01-brief.md")
     fill(job / "02-scope.md")
+    validate_intake(job)
     assert st.readiness(job, st.load(job), "brief") == []
     approve(job, "brief")
     assert st.load(job)["stage"] == "strategy"
@@ -233,9 +248,56 @@ def test_identity_check_is_tied_to_the_stage_not_the_gate_name(tmp_path, monkeyp
     assert not any("refinement-log" in p for p in st.readiness(j, st.load(j), "system"))
 
 
+def test_intake_validation_blocks_the_brief_gate(job):
+    """A brief written first and validated afterwards does not pass."""
+    fill(job / "01-brief.md")
+    fill(job / "02-scope.md")
+    st.main(["plan", "--start", "2026-09-28", "--job", str(job)])
+    v = job / "00-intake" / "validation.md"
+    problems = lambda: [p for p in st.readiness(job, st.load(job), "brief") if "validation" in p]
+
+    assert v.exists(), "init writes the validation file so it is filled as intake happens"
+    assert any("unfilled prompt" in p for p in problems())
+
+    v.unlink()
+    assert any("is missing" in p for p in problems())
+
+    validate_intake(job, answers=2)
+    assert any("records 2 answered question(s)" in p for p in problems())
+
+    validate_intake(job, answers=3)
+    assert problems() == []
+    assert st.main(["gate", "raise", "brief", "--job", str(job)]) == 0
+
+
+@pytest.mark.parametrize("answer,counts", [
+    ("The budget is £30k to £45k.", True),
+    ("unanswered", False),
+    ("TBC", False),
+    ("{{Tim's answer}}", False),
+    ("<his words>", False),
+    ("-", False),
+    ("Yes.", True),
+])
+def test_only_real_answers_count(tmp_path, answer, counts):
+    p = tmp_path / "validation.md"
+    p.write_text(f"1. **Q:** Something?\n   **A:** {answer}\n")
+    assert bool(st.answered_questions(p)) is counts
+
+
+def test_the_producer_cannot_invent_the_competitive_set():
+    """The checklist and the brief template both say competitors are client-named only."""
+    tpl = (ROOT / "skills" / "producer" / "assets" / "templates").resolve()
+    assert "Only the competitors the client named" in (tpl / "brief.md").read_text()
+    v = (tpl / "validation.md").read_text()
+    assert "Competitors are only ever `supplied` or `missing`" in v
+    assert "as the client named them" in (ROOT / "skills" / "studio-intake" / "SKILL.md").read_text()
+
+
 def test_rework_and_decisions_log(job):
     fill(job / "01-brief.md")
     fill(job / "02-scope.md")
+    validate_intake(job)
     st.main(["plan", "--start", "2026-09-28", "--job", str(job)])
     st.main(["gate", "raise", "brief", "--job", str(job)])
     with pytest.raises(SystemExit):
