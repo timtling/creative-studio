@@ -2,7 +2,7 @@
 name: studio-status
 description: >
   This skill should be used when Tim asks where a creative studio job stands: "/studio-status",
-  "where are we on <codename>" for a studio job, "what's pending in the studio", "what's next on the
+  "where are we on [codename]" for a studio job, "what's pending in the studio", "what's next on the
   brand sprint", or when a new session needs to pick up a studio job started elsewhere. It reports the
   stage, the pending gate, days to the client date, revision rounds, open change requests and the next
   action. Engagement studio status uses the engagement studio instead.

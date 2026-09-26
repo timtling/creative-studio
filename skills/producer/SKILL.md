@@ -3,7 +3,7 @@ name: producer
 description: >
   This skill should be used whenever work runs through the creative studio: a brand, identity, launch,
   website, pitch deck or product UI job for a client, "start a studio job", "brand sprint for", "launch kit",
-  "where are we on <codename>" for a studio job, or any studio command (/studio-intake, /studio-gate,
+  "where are we on [codename]" for a studio job, or any studio command (/studio-intake, /studio-gate,
   /studio-status, /commission). It is the Producer's operating model: tracks, roster, file ownership, gates,
   client revision rounds, change requests, commissions and data handling. Load it before any studio stage
   skill acts. It does not apply to NTT DATA consulting engagements, which run through the engagement studio.

@@ -2,7 +2,7 @@
 name: studio-close
 description: >
   This skill should be used when a creative studio job is finished or being stopped: "/studio-close",
-  "close the job", "write up the job", "what did we learn on <codename>", "turn this job into evals",
+  "close the job", "write up the job", "what did we learn on [codename]", "turn this job into evals",
   or after the final gate once Delivery has packaged the work. It turns a finished job into three
   things the studio keeps: the intervention log (every time a human had to step in), the fix list
   (what to change in the studio itself), and eval cases drawn from the job's own record. It does not
