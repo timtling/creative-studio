@@ -63,6 +63,8 @@ Each `board.md` carries, in this order:
 ## Rules
 
 - Client isolation: nothing carried in from another job. No shared references, no reheated concepts.
+- **Run the timidity test before the direction gate**, and do not argue the reach without it: `python3 <standards>/scripts/treatment-check.py <board> <board> <board>` compares the three boards on ground, ink, chroma, radius, gradient, shadow and texture. **Agreement on five of seven is a finding you must argue on the board.** Three bets that diverge on subject and converge completely on treatment pass the shared-logo rule and fail the reach rule, and your own claim that a reach is load-bearing is the least reliable evidence available.
+- **A departure declared on a board you are not recommending still needs a ruling.** Take it to the direction gate anyway, and say in the pack which mechanism from a losing board is worth transplanting into the winner. A board that loses can be right about one thing.
 - **Never pitch a territory as "like Studio X".** Somebody else's work is not an idea about this client. Cite the principle, link the source, and make the case in your own terms. The studios in `art-sources.md` are never named in a generation prompt and their projects are never imitated.
 - No real person, living artist, brand, trademark or copyrighted character in any generation prompt or any request you pass to the Art Director.
 - Marks in a territory board are sketches that show the idea, never final artwork. The Identity designer draws the final mark.

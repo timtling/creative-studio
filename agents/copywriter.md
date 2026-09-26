@@ -52,6 +52,8 @@ The folder's owner reviews your copy and proposes changes; you make them.
 
 - Client isolation: no lines, names or constructions carried over from another client.
 - The anti-generic list is a floor, not a style guide. Avoiding "unlock" does not make a line good.
+- **A negation is still a claim.** Turn it into its positive and ask whether the client could stand behind it. A negation about *what we claim* is safe ("we make no claim about how long a log is kept"); a negation about *what the software does* is a claim and needs evidence. **Apply the test hardest where the register is warmest**: writing it the way they would say it is what hides a breach most reliably, and a line in the buyer's own vocabulary survives passes that the same assertion in studio language would not.
+- **Choose the shape of a ceiling by who handles the copy next.** A stranger's editor deletes negations first, so copy that will be pasted and trimmed outside the studio carries its ceiling as a positive. Boilerplate above all: it is the one piece quoted back as though it were a matter of record.
 - You do not change the positioning. If the argument is wrong, say so to the Producer and it goes back to the Strategist.
 - You do not design, and you do not set type. Ask the owner of the file.
 - You do not talk to the client. Questions go to the Producer.

@@ -9,6 +9,7 @@ An independent creative studio run by a team of agents. It takes brand, identity
 | 0.1.0 | Art Director agent; image generation on Recraft and Replicate with a provenance ledger, budget and licence guard rails (parked until needed) |
 | 0.2.0 | Producer workflow: five tracks, job set-up, planning, gates, client revision rounds, feedback triage, change requests, commissions. Studio standards and the anti-generic list. Brand vault: design tokens with validation, contrast checks, CSS, Blender and swatch-page builds, and a lint hook |
 | 0.3.0 | The four creative roles: Strategist, Creative Lead, Copywriter and Identity designer. The Producer now has someone to route every stage of a brand sprint to |
+| 0.3.7 | The scope is audited promise by promise rather than row by row, and the final gate refuses to raise without it: Delivery fills the audit, the Producer cross-reads it, and the pack's scope section is generated. A cross-read at every gate. Verification gets a budget per track and an explicit stopping call. The vault lint runs at every gate rather than trusting the write hook. A negation is a claim. A failing test for timidity |
 | 0.3.6 | Expressive range: one territory of three must reach into art practice, and three restrained territories is a timidity finding. Art sources and five studio benchmarks. An optional expressive token layer with a texture-behind-body-text lint. An expression budget set in the brief |
 | 0.3.5 | 3D needs one of three reasons before anyone renders: a physical touchpoint, a spatial territory idea argued on the board, or explanation that needs space. The `blender-3d` skill builds scenes from the vault's own colour values. The system gate says when it could not verify a refinement rather than passing quietly |
 | 0.3.4 | Intake is validated against an eleven-item checklist and at least three answered questions before the brief is drafted; the brief gate refuses to raise without it |
@@ -61,10 +62,11 @@ The Mac mini is the studio's home machine: jobs in `~/Studio/jobs/<client>-<job>
 
 All standard-library Python, run by the skills:
 
-- `skills/producer/scripts/studio.py`: `init`, `plan`, `check`, `gate raise|record`, `round`, `feedback`, `cr`, `status`, `set-active`
+- `skills/producer/scripts/studio.py`: `init`, `plan`, `log`, `scope-audit`, `cross-read`, `verify-pass`, `verify-close`, `check`, `gate raise|record`, `round`, `feedback`, `cr`, `status`, `set-active`
 - `skills/brand-vault/scripts/vault.py`: `init`, `validate`, `build`, `contrast`, `lint`, `hook-lint`
 - `skills/image-generation/scripts/imagekit.py`: job ledger, budget, capture, contact sheet, provenance
-- `skills/blender-3d/scripts/blenderkit.py`: `presets`, `plan`, `render` (inside Blender), `verify`, `report`
+- `skills/blender-3d/scripts/blenderkit.py`: `presets`, `plan`, `render` (inside Blender, against a scene you supply), `verify`, `report`
+- `skills/studio-standards/scripts/treatment-check.py`: the timidity test, comparing three boards on seven treatment dimensions
 
 ## Hooks
 
@@ -107,7 +109,7 @@ skills/
   studio-close/        SKILL.md
   studio-status/       SKILL.md
   commission/          SKILL.md
-  studio-standards/    SKILL.md, references/{anti-generic,art-sources}.md
+  studio-standards/    SKILL.md, scripts/treatment-check.py, references/{anti-generic,art-sources}.md
   brand-vault/         SKILL.md, scripts/vault.py, assets/tokens.template.json
   image-generation/    SKILL.md, references/, scripts/imagekit.py
   blender-3d/          SKILL.md, scripts/blenderkit.py

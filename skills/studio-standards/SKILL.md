@@ -7,7 +7,7 @@ description: >
   conventions. Every studio agent and every panel lens loads it. Also use it when Tim asks to "check this
   against the studio standards", "is this generic" or "does this meet the bar".
 metadata:
-  version: "0.3.6"
+  version: "0.3.7"
 ---
 
 # Studio standards
@@ -25,10 +25,15 @@ The bar is a studio a client hires because its in-house work is competent but in
 7. **Declared departures.** A territory may break a rule here, including the anti-generic list, only if the board names the rule and argues why breaking it serves the idea.
 8. **Client isolation.** Nothing crosses between clients: no reused concepts, styles, names or references from another job.
 9. **Human at every gate.** Nothing client-facing leaves without Tim's approval.
+10. **Cross-read at every gate.** One role checks another's completeness claim against the commissioning document, never its own. Recorded with `studio.py cross-read <gate> --by <role> --of <role> --against <document>`, and `studio.py check <gate>` will not pass without it. This is not a request to be more careful: three roles made the same sourcing mistake on one job and not one caught it in their own work, so the fix is that somebody else reads the claim, which is cheaper precisely because it does not require anyone to be more careful.
+11. **Name the question, then name the source that governs it.** *What must exist* is the commissioning document (`02-scope.md`, the commission brief). *What does exist* is the artefact itself. *What this claim means* is the owner, or the client's own words. Completeness and content need **different sources**, and anything asserting both needs both. A gate pack, a stage README and a guidelines document each say *this is complete* and *this says X* in one breath, which is exactly where three failures sat, each author having verified only one half. And where a document describes a set of files, values or strings, **generate it from them and fail the build** when a described thing is missing or an existing thing is undescribed: three documents turned into generators each found a real defect on their first run, and none of the three defects had been found by a person reading the same file.
+12. **Checking stops when a pass finds nothing, not when the budget runs out.** Every stage's verification gets a budget of full passes per track (`studio.py verify-pass`), and going beyond it is a stated decision rather than a habit. Checking closes on the Producer's explicit call, recorded in `90-decisions.md` with why (`studio.py verify-close ... --call "..."`), and it may only close on a pass that found nothing that would ship wrong. A verification nobody closed is not thoroughness; it is a job with no end condition.
 
 ## Anti-generic list
 
 `references/art-sources.md` is where to reach when the work is going polite: art practice as principles, and five studios whose work sets the bar — bold and systemic at once. Principles are cited and linked on the board. Nothing is copied, nothing is named in a generation prompt, and no territory is pitched as "like Studio X".
+
+**Timidity has a failing test, and it is a script rather than a judgement.** `scripts/treatment-check.py <board> <board> <board>` reads the three territory boards' own rendered values and compares them on seven treatment dimensions: ground, ink, chroma, radius, gradient, shadow and texture. **Three boards agreeing on five of the seven is a finding the Creative Lead must argue on the board**, not a fail. The reason it is a script is that the author's own claim that a reach is load-bearing is the least reliable evidence available: on the job this came from, all three boards diverged completely on subject and agreed on seven of seven treatments, passing rule 2 while failing rule 3, and nobody noticed until after handover.
 
 `references/anti-generic.md` lists the visual and verbal defaults the studio does not ship unless a declared departure argues for them. Check work against it before any gate. The panel's Creative and Craft lenses use it from 0.4.0; until then the Creative Lead and the Producer check against it before every gate.
 
@@ -88,6 +93,9 @@ The brief records the dial and names the surfaces on both sides of the line, so 
 - Specific over impressive: name the customer, the number, the outcome. Cut any sentence the client's competitor could also say.
 - Run the `humanizer` skill over long copy before review.
 - No claims the client cannot evidence. Superlatives ("the leading", "the first") need a source or they go.
+- **A negation is still a claim.** "Not retained beyond the day" asserts deletion exactly as much as "kept for seven years" asserts keeping, and about a product nobody has described both are unevidenced. The test is mechanical: **turn the negation into its positive and ask whether the client could stand behind it.** The distinction that makes it checkable is scope: a negation about *what we claim* needs no evidence ("we make no claim about how long a log is kept"); a negation about *what the software does* is a claim. A claim ceilings table whose rows all guard positive forms lets every negation through, so each row carries a Never/Permitted pairing and the sold-as versus does distinction.
+- **Apply the negation test hardest where the register is warmest.** The friendlier the writing, the less a negation looks like a claim: one assertion appeared twice on the same job, and the version in the buyer's own vocabulary survived two further passes purely because it sounded like something a real operations director would say. *Write it the way they would say it* is the principle most likely to hide a breach of *claim nothing you cannot evidence*.
+- **Which shape a ceiling takes depends on who handles the copy next.** A stranger's editor deletes negations first: they read as caveats and are the first thing cut for length. Copy that will be pasted and trimmed by someone outside the studio, boilerplate above all, carries its ceiling as a positive rather than as a denial.
 
 ## References and originality
 

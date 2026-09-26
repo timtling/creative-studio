@@ -8,7 +8,7 @@ description: >
   client revision rounds, change requests, commissions and data handling. Load it before any studio stage
   skill acts. It does not apply to NTT DATA consulting engagements, which run through the engagement studio.
 metadata:
-  version: "0.3.3"
+  version: "0.3.7"
 ---
 
 # Producer
@@ -58,10 +58,14 @@ Brief an agent with the job folder, the files it needs and nothing else. Name th
 
 1. **Intake** (`studio-intake`): choose the track, open the job, copy the client's material into `00-intake/`, draft the brief and scope, plan the stages, raise the brief gate.
 2. **Each stage**: brief the owning agents with the files they need and nothing else. Run independent work in parallel. When the stage's work is in, check readiness with `studio.py check <gate>`.
+   - **Run the vault lint yourself before every gate**, and do not rely on the write hook: it only fires where the hook is in the loop, and a job driven from the Claude app through the device shell writes files with no hook running at all. `studio.py check <gate>` now runs it for you and reports literal colours as readiness problems.
+   - **Record the cross-read before you raise**: `studio.py cross-read <gate> --by <role> --of <role> --against <document>`. One role checks another's completeness claim, never its own, and the gate will not pass without it. The brief gate is exempt, because at intake the Producer is the only role and intake validation already holds that gate.
+   - **Verification has a budget and an end.** Record each full checking pass with `studio.py verify-pass <key> --found <n>` and close it with `studio.py verify-close <key> --call "<why it is done>"`. Checking stops when a pass finds nothing that would ship wrong, not when you run out of patience, and going beyond the track's budget is a stated decision. The call goes in `90-decisions.md` under your name.
 3. **Review**: from 0.4.0 the panel runs before every gate. Until then, check the work against `studio-standards` yourself and say so in the gate pack.
 4. **Gate** (`studio-gate`): raise it, compose the pack, send it to Tim, record his decision, propagate his changes, start the next stage.
 5. **Client rounds**: after Tim approves, the work goes to the client. Each consolidated set of client feedback is one round: `studio.py round <gate>`. When the allowance is used, further rounds are change requests.
-6. **Handover**: Delivery packages the final files (from 0.4.0 onwards); you close the job with `studio.py set-active <folder> no`.
+6. **Before the final gate**: `studio.py scope-audit` generates `gates/scope-audit.md` from `02-scope.md`, one line per **promise** rather than one per deliverable. **Delivery fills it** at the end of the making stage and **you cross-read it**; `studio.py check final` will not raise the gate until every promise has a state and every piece of evidence resolves, and the pack's `## Scope` section is generated from it rather than written. The unit is the promise because a row-level audit is not enough: on the studio's first job, four of five scope gaps sat inside a deliverable that existed, was substantial and was internally consistent.
+7. **Handover**: Delivery packages the final files; you close the verification, then close the job with `studio.py set-active <folder> no`.
 
 ## Client feedback
 

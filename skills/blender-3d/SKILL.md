@@ -4,12 +4,12 @@ description: >
   This skill should be used for any 3D on a creative studio job: "mock the mark up on a van",
   "render the signage", "how does this look at 25 metres", "3D hero", "turntable", "packaging
   mockup", "why do the renders look washed out", "set up a Blender scene from the vault". It
-  covers when 3D is allowed at all, building scenes from the brand's own colour values, the
+  covers when 3D is allowed at all, taking scene colours from the brand's own values, the
   draft and final presets, running Blender headless, and recording what was rendered so a result
-  can be reproduced. The Identity designer uses it for touchpoint tests; the Art Director and the
+  can be reproduced. It does not build geometry for you: the scene is yours to supply. The Identity designer uses it for touchpoint tests; the Art Director and the
   Builder use it for approved 3D only.
 metadata:
-  version: "0.3.5"
+  version: "0.3.7"
 ---
 
 # Blender 3D
@@ -31,7 +31,19 @@ Two rules, both non-negotiable:
 1. **Material colours come from `vault/build/blender.json`**, which `vault.py build` writes as linear RGBA from the vault's own tokens. Never type a hex value into Blender and never convert one by eye.
 2. **Set the scene's view transform to Standard.** `scene.view_settings.view_transform = "Standard"`. Check it in the render, not in the code: a Standard render of a brand surface next to the vault's swatch should be the same colour.
 
-`scripts/blenderkit.py` does both when it builds a scene, and `verify` re-reads a finished render and reports the difference against the token it was meant to be.
+`scripts/blenderkit.py` does both to whatever scene it is given, and `verify` re-reads a finished render and reports the difference against the token it was meant to be.
+
+**`blenderkit.py` does not build a scene, and you have to supply one.** It sets the view transform, the engine, the samples and the resolution, moves the camera to each distance and renders. It creates no geometry, no materials, no lights and no camera. Run against Blender's factory startup file it will therefore render **Blender's default cube**, correctly exposed, in the brand's colours, and tell you nothing. Supply the scene one of two ways:
+
+```
+# a saved scene
+blender --background <scene>.blend --python <skill>/scripts/blenderkit.py -- --job ... --scene van
+
+# a scene script that builds the geometry first, then hands over
+blender --background --python build-scene.py --python <skill>/scripts/blenderkit.py -- --job ... --scene van
+```
+
+The scene script is the better of the two, because a `.blend` is not a record of how the scene was made. **Whatever specifies the answer has to be in the scene script and stated**: on the studio's first livery test the mark height was specified and the light was not, so the geometry findings were confirmable arithmetic and the one lighting-dependent finding had to be downgraded to a hypothesis. 3D earns its place where the answer depends on something the geometry does not contain, which is exactly the set of variables that must be pinned down before a render is evidence rather than an illustration.
 
 ## The presets
 

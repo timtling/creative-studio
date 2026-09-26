@@ -47,9 +47,18 @@ def sign(job, who="Tim Ling"):
         f"- 2026-10-06 · v4 · refined by: {who} · raised the crossbar; it filled in at 16px\n")
 
 
+def cross_read(job, gate, by="delivery", of="producer"):
+    """The cross-read every gate but brief now requires before it can be raised."""
+    if gate == "brief":
+        return
+    assert st.main(["cross-read", gate, "--by", by, "--of", of,
+                    "--against", "02-scope.md", "--job", str(job)]) == 0
+
+
 def approve(job, gate):
     if gate == "brief":
         validate_intake(job)
+    cross_read(job, gate)
     assert st.main(["gate", "raise", gate, "--job", str(job)]) == 0
     assert st.main(["gate", "record", gate, "--status", "approved", "--job", str(job)]) == 0
 
@@ -115,6 +124,8 @@ def test_order_territories_and_vault(job, tmp_path):
     v = filled(tmp_path / "v")
     (job / "vault" / "tokens.json").write_text((v / "tokens.json").read_text())
     sign(job)
+    assert any("no cross-read recorded" in x for x in st.readiness(job, st.load(job), "system"))
+    cross_read(job, "system")
     assert st.readiness(job, st.load(job), "system") == []
 
 
@@ -174,7 +185,7 @@ def test_placeholder_in_the_log_does_not_open_the_system_gate(job, tmp_path):
 
 
 SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40">{}</svg>'
-BAR = '<rect x="{x}" y="10" width="20" height="20" fill="#17191a"/>'
+BAR = '<rect x="{x}" y="10" width="20" height="20" fill="#0B1B3F"/>'   # ink in test_vault.PALETTE
 
 
 def _write_mark(job, version, x):
@@ -258,6 +269,7 @@ def test_no_renderer_warns_in_the_pack_rather_than_passing_quietly(job, tmp_path
     for g in ("brief", "direction"):
         st.main(["gate", "raise", g, "--job", str(job), "--force"])
         st.main(["gate", "record", g, "--status", "approved", "--job", str(job)])
+    cross_read(job, "system")
     assert st.main(["gate", "raise", "system", "--job", str(job)]) == 0
     pack = (job / "gates" / "system.md").read_text()
     assert "## Not verified" in pack and "effect not verified: no renderer" in pack
@@ -336,6 +348,28 @@ def test_the_producer_cannot_invent_the_competitive_set():
     assert "as the client named them" in (ROOT / "skills" / "studio-intake" / "SKILL.md").read_text()
 
 
+def test_log_takes_its_time_from_the_clock_not_from_the_typist(job, monkeypatch):
+    """Cypress: hand-typed timestamps drifted ahead and crossed a midnight that
+    had not happened. The Producer must never type a time again."""
+    import datetime as dt
+    fixed = dt.datetime(2026, 9, 25, 21, 35, tzinfo=st.SGT)
+    monkeypatch.setattr(st, "now", lambda: fixed)
+    assert st.main(["log", "Van", "livery", "test", "run.", "--job", str(job)]) == 0
+    line = [l for l in (job / "90-decisions.md").read_text().splitlines() if "Van livery" in l][0]
+    assert line.startswith("- 25 Sep 2026 21:35: ")
+    assert "Van livery test run." in line
+
+
+def test_log_refuses_an_empty_line(job):
+    with pytest.raises(SystemExit):
+        st.main(["log", "   ", "--job", str(job)])
+
+
+def test_the_studio_clock_is_singapore():
+    """The Mac mini runs Asia/Singapore; studio.py must agree with it."""
+    assert st.SGT == dt.timezone(dt.timedelta(hours=8))
+
+
 def test_rework_and_decisions_log(job):
     fill(job / "01-brief.md")
     fill(job / "02-scope.md")
@@ -397,3 +431,366 @@ def test_imagekit_reads_a_studio_job(job, monkeypatch):
     ik.main(["confirm-recraft-paid", "--plan", "Pro", "--job", str(job)])
     assert ik.pre_check(job, "mcp__Recraft__generate_image", {"prompt": "x"}) is None
     assert st.load(job)["track"] == "sprint"  # imagekit writes did not clobber studio state
+
+
+# --------------------------------------------------------------------------- 0.3.7: the scope audit
+#
+# Every test below names the Cypress failure it was built from. The point of the
+# class is that a row-level audit passes four of the five gaps, so the tests assert
+# the row-level view is clean and the promise-level one is not.
+
+CYPRESS_SCOPE = """# Scope of work: Cypress
+
+## Deliverables
+
+| Deliverable | Delivered as | Includes |
+|---|---|---|
+| Brand strategy | Doc | Positioning, the proposition, messaging hierarchy |
+| Verbal identity | Doc | Tone of voice, the category words we refuse, boilerplate |
+| Creative territories | Doc with visual boards | Three strategic bets, one recommended |
+| Identity system | Design System artifact, plus SVG, PNG and PDF | Primary mark, small-size variant, clear space, misuse |
+| Brand vault | `vault/tokens.json` plus exports | Colour, type, space, radius and motion tokens |
+| Brand guidelines | HTML microsite with PDF export | The system, in use: mark, type, colour, layout, imagery, voice, accessibility floor |
+| Imagery direction | Doc and contact sheet | Art direction, shot list, a custom style |
+| Landing page | Production HTML | A recorded morning, the decision it turned on |
+| Pitch deck | Slides, exports .pptx | A 12 to 15 slide shell, the narrative, three slides fully designed |
+| Handover | Folder plus a README | Source files, fonts and licences, tokens |
+
+## Not included
+
+- Nothing else.
+"""
+
+
+def cypress_scope(job):
+    (job / "02-scope.md").write_text(CYPRESS_SCOPE)
+    assert st.main(["plan", "--start", "2026-09-28", "--job", str(job)]) == 0
+
+
+def write_audit(job, rows=None, filled="delivery", cross="producer", default=("shipped", "02-scope.md")):
+    """The audit as Delivery would leave it. `rows` overrides individual promises by key."""
+    rows = rows or {}
+    out = ["# Scope audit: test", "", f"filled-by: {filled}", f"cross-read-by: {cross}",
+           "scope-read: 26 Sep 2026 13:00", "",
+           "| Key | Bought | Kind | State | Evidence |", "|---|---|---|---|---|"]
+    for pr in st.parse_scope(job):
+        state, ev = rows.get(pr["key"], default)
+        out.append(f"| {pr['key']} | {pr['deliverable']} · {pr['promise']} | {pr['kind']} | {state} | {ev} |")
+    st.audit_path(job).parent.mkdir(parents=True, exist_ok=True)
+    st.audit_path(job).write_text("\n".join(out) + "\n")
+
+
+def at_final(job, tmp_path):
+    """A job standing where Cypress stood when its final gate was approved."""
+    cypress_scope(job)
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    fill(job / "01-brief.md")
+    (job / "10-strategy" / "positioning.md").write_text("x")
+    for t in ("T1", "T2", "T3"):
+        (job / "20-territories" / t).mkdir(exist_ok=True)
+        (job / "20-territories" / t / "board.md").write_text("x")
+    sign(job)
+    (job / "30-identity" / "marks.md").write_text("x")
+    (job / "50-applications").mkdir(exist_ok=True)
+    (job / "50-applications" / "tessel-guidelines-v1.html").write_text("<h1>Guidelines</h1>")
+    for g in ("brief", "direction", "system"):
+        approve(job, g)
+    cross_read(job, "final")
+
+
+def test_the_scope_is_read_promise_by_promise_not_row_by_row(job):
+    """Cypress: four of five scope gaps sat inside a row a row-level check passes."""
+    cypress_scope(job)
+    keys = {p["key"] for p in st.parse_scope(job)}
+    # The four gaps that were invisible at row level, each its own promise:
+    for k in ("2.subject.boilerplate", "4.format.png", "4.format.pdf",
+              "4.format.design-system-artifact", "9.format.pptx", "6.subject.voice"):
+        assert k in keys, k
+    # Row 6 buys seven subjects, and every one of them is its own line.
+    six = {p["promise"].lower() for p in st.parse_scope(job) if p["row"] == 6 and p["kind"] == "subject"}
+    for subject in ("mark", "type", "colour", "layout", "imagery", "voice", "accessibility floor"):
+        assert subject in six, subject
+    promises = st.parse_scope(job)
+    assert len(promises) > 3 * len({p["row"] for p in promises}), \
+        "a promise-level audit must be several times longer than a row-level one"
+
+
+def test_the_parser_fails_loudly_rather_than_finding_fewer_promises(job):
+    """A parser that silently yields a shorter list would hide the thing being audited."""
+    (job / "02-scope.md").write_text("# Scope\n\nNo table here.\n")
+    with pytest.raises(st.ScopeError, match="no '## Deliverables' heading"):
+        st.parse_scope(job)
+
+    (job / "02-scope.md").write_text("## Deliverables\n\nProse, no table.\n")
+    with pytest.raises(st.ScopeError, match="no table under it"):
+        st.parse_scope(job)
+
+    (job / "02-scope.md").write_text("## Deliverables\n\n| Thing | Format |\n|---|---|\n| A | Doc |\n")
+    with pytest.raises(st.ScopeError, match="three columns"):
+        st.parse_scope(job)
+
+    (job / "02-scope.md").write_text(
+        "## Deliverables\n\n| Deliverable | Delivered as | Includes |\n|---|---|---|\n| A | Doc |\n")
+    with pytest.raises(st.ScopeError, match="row 1 has 2 cells"):
+        st.parse_scope(job)
+
+    (job / "02-scope.md").write_text(
+        "## Deliverables\n\n| Deliverable | Delivered as | Includes |\n|---|---|---|\n| A | Doc |  |\n")
+    with pytest.raises(st.ScopeError, match="'subject' column is empty"):
+        st.parse_scope(job)
+
+
+def test_the_final_gate_will_not_raise_with_an_unstated_promise(job, tmp_path):
+    """THE CYPRESS CASE. The guidelines microsite exists, is substantial and is
+    internally consistent; voice, one of the seven subjects the row bought, is not
+    answered. The row passes. The gate must not."""
+    at_final(job, tmp_path)
+    write_audit(job)
+    assert st.readiness(job, st.load(job), "final") == [], "a fully answered audit raises the gate"
+
+    write_audit(job, {"6.subject.voice": ("unstated", "")})
+    probs = st.readiness(job, st.load(job), "final")
+    assert any("6.subject.voice" in p and "unstated" in p for p in probs), probs
+    # and the row-level view of the same job is clean, which is the whole point
+    assert st.nonempty(job / "50-applications")
+    assert (job / "50-applications" / "tessel-guidelines-v1.html").exists()
+    assert st.main(["gate", "raise", "final", "--job", str(job)]) == 1
+
+
+def test_the_final_gate_will_not_raise_without_an_audit_at_all(job, tmp_path):
+    """Cypress: readiness passed on 50-applications/ being non-empty and the pack
+    was written from what the roles reported."""
+    at_final(job, tmp_path)
+    probs = st.readiness(job, st.load(job), "final")
+    assert any("scope-audit.md is missing" in p for p in probs), probs
+    assert any("promise lines" in p for p in probs)
+
+
+def test_shipped_needs_evidence_that_resolves(job, tmp_path):
+    at_final(job, tmp_path)
+    write_audit(job, {"9.format.pptx": ("shipped", "50-applications/tessel-deck-v1.pptx")})
+    probs = st.readiness(job, st.load(job), "final")
+    assert any("9.format.pptx" in p and "does not exist in the job" in p for p in probs), probs
+
+    (job / "50-applications" / "tessel-deck-v1.pptx").write_text("x")
+    assert st.readiness(job, st.load(job), "final") == []
+
+    write_audit(job, {"9.format.pptx": ("shipped", "")})
+    assert any("shipped with no evidence" in p for p in st.readiness(job, st.load(job), "final"))
+
+    write_audit(job, {"9.format.pptx": ("shipped", "https://claude.ai/artifact/abc")})
+    assert st.readiness(job, st.load(job), "final") == [], "an artifact URL is evidence too"
+
+
+def test_absent_by_decision_must_name_a_gate_that_decided_it(job, tmp_path):
+    """Cypress row 7: imagery was parked by Tim at the direction gate, so nobody owes
+    anybody anything. The state is only safe because the tool can check it."""
+    at_final(job, tmp_path)
+    imagery = [p["key"] for p in st.parse_scope(job) if p["row"] == 7]
+    write_audit(job, {k: ("absent-by-decision", "direction") for k in imagery})
+    assert st.readiness(job, st.load(job), "final") == [], "parked at a decided gate is a decision, not a gap"
+
+    write_audit(job, {k: ("absent-by-decision", "") for k in imagery})
+    assert any("names no gate" in p for p in st.readiness(job, st.load(job), "final"))
+
+    write_audit(job, {k: ("absent-by-decision", "handover") for k in imagery})
+    assert any("not a gate on this track" in p for p in st.readiness(job, st.load(job), "final"))
+
+    write_audit(job, {k: ("absent-by-decision", "final") for k in imagery})
+    assert any("carries no recorded decision" in p for p in st.readiness(job, st.load(job), "final")), \
+        "the final gate has not been decided yet, so it cannot be what parked a deliverable"
+
+
+def test_short_and_client_blocked_need_a_note(job, tmp_path):
+    at_final(job, tmp_path)
+    write_audit(job, {"2.subject.boilerplate": ("short", "")})
+    assert any("no note saying what is outstanding" in p for p in st.readiness(job, st.load(job), "final"))
+    write_audit(job, {"2.subject.boilerplate": ("short", "no boilerplate anywhere in the job")})
+    assert st.readiness(job, st.load(job), "final") == []
+    write_audit(job, {"8.subject.recorded-morning": ("client-blocked", "the client owes the destination URL")})
+    assert st.readiness(job, st.load(job), "final") == []
+    write_audit(job, {"2.subject.boilerplate": ("nearly", "almost there")})
+    assert any("is not one of" in p for p in st.readiness(job, st.load(job), "final"))
+
+
+def test_a_role_cannot_cross_read_its_own_scope_audit(job, tmp_path):
+    """Rule 4: the failure was three roles each verifying their own half."""
+    at_final(job, tmp_path)
+    write_audit(job, filled="delivery", cross="Delivery")
+    probs = st.readiness(job, st.load(job), "final")
+    assert any("cannot cross-read its own completeness claim" in p for p in probs), probs
+    write_audit(job, filled="{{a role}}", cross="producer")
+    assert any("'filled-by' is not filled in" in p for p in st.readiness(job, st.load(job), "final"))
+
+
+def test_a_scope_change_after_the_audit_reopens_it(job, tmp_path):
+    """The Builder's point: a generated document cannot be quietly out of date."""
+    at_final(job, tmp_path)
+    write_audit(job)
+    assert st.readiness(job, st.load(job), "final") == []
+    import os
+    scope = job / "02-scope.md"
+    scope.write_text(scope.read_text().replace(
+        "| Handover | Folder plus a README | Source files, fonts and licences, tokens |",
+        "| Handover | Folder plus a README | Source files, fonts and licences, tokens |\n"
+        "| Motion | Lottie | A logo animation |"))
+    os.utime(scope, (os.path.getmtime(scope) + 60, os.path.getmtime(scope) + 60))
+    assert any("older than 02-scope.md" in p for p in st.readiness(job, st.load(job), "final"))
+
+
+def test_regenerating_the_audit_keeps_answers_and_opens_new_promises(job, tmp_path):
+    at_final(job, tmp_path)
+    write_audit(job, {"2.subject.boilerplate": ("short", "not written yet")})
+    scope = job / "02-scope.md"
+    scope.write_text(scope.read_text().replace(
+        "| Motion | Lottie | A logo animation |", "").replace(
+        "| Handover | Folder plus a README | Source files, fonts and licences, tokens |",
+        "| Handover | Folder plus a README | Source files, fonts and licences, tokens |\n"
+        "| Motion | Lottie | A logo animation |"))
+    assert st.main(["scope-audit", "--job", str(job)]) == 0
+    meta, rows = st.parse_audit(job)
+    assert meta["filled-by"] == "delivery" and meta["cross-read-by"] == "producer", "names are carried over"
+    assert rows["2.subject.boilerplate"] == ("short", "not written yet"), "answers are carried over by key"
+    assert rows["11.format.lottie"] == ("unstated", ""), \
+        "a promise the scope has just gained arrives unstated, not as an absence nobody sees"
+
+
+def test_the_final_pack_carries_a_generated_scope_section(job, tmp_path):
+    """Cypress: the template had no section that had to be filled from the scope,
+    so nothing in the document prompted the check."""
+    at_final(job, tmp_path)
+    write_audit(job, {"2.subject.boilerplate": ("short", "not written yet")})
+    assert st.main(["gate", "raise", "final", "--job", str(job), "--force"]) == 0
+    pack = (job / "gates" / "final.md").read_text()
+    assert "## Scope" in pack and pack.index("## Scope") < pack.index("## Trade-offs and risks")
+    assert "1 short" in pack and "2. Verbal identity" in pack
+    assert "Complete" in pack
+
+
+# --------------------------------------------------------------------------- 0.3.7: cross-read
+
+def test_every_gate_but_brief_needs_a_cross_read(job):
+    """Three roles, one sourcing failure, none caught by its author."""
+    cypress_scope(job)
+    fill(job / "01-brief.md")
+    validate_intake(job)
+    assert st.readiness(job, st.load(job), "brief") == [], "the brief gate is exempt: nobody else is here yet"
+    approve(job, "brief")
+    (job / "10-strategy" / "positioning.md").write_text("x")
+    for t in ("T1", "T2", "T3"):
+        (job / "20-territories" / t).mkdir(exist_ok=True)
+        (job / "20-territories" / t / "board.md").write_text("x")
+    probs = st.readiness(job, st.load(job), "direction")
+    assert any("no cross-read recorded for 'direction'" in p for p in probs), probs
+    assert st.main(["gate", "raise", "direction", "--job", str(job)]) == 1
+    cross_read(job, "direction", by="creative-lead", of="strategist")
+    assert st.readiness(job, st.load(job), "direction") == []
+    cr = st.load(job)["gates"]["direction"]["cross_read"]
+    assert cr["by"] == "creative-lead" and cr["of"] == "strategist" and cr["against"] == "02-scope.md"
+    assert "Cross-read for gate 'direction'" in (job / "90-decisions.md").read_text()
+
+
+def test_a_role_cannot_cross_read_itself(job):
+    with pytest.raises(SystemExit, match="cannot cross-read its own"):
+        st.main(["cross-read", "direction", "--by", "Producer", "--of", "producer", "--job", str(job)])
+    # and a record forced in by hand is caught at the gate, not only at the command
+    d = st.load(job)
+    d["gates"]["direction"]["cross_read"] = {"by": "producer", "of": "producer"}
+    st.save(job, d)
+    assert any("checking its own completeness claim" in p
+               for p in st.readiness(job, st.load(job), "direction"))
+
+
+# --------------------------------------------------------------------------- 0.3.7: the vault lint at the gate
+
+def test_the_vault_lint_runs_at_every_gate_because_the_hook_may_never_fire(job, tmp_path):
+    """A job driven from the Claude app through the device shell writes every file
+    with no PostToolUse hook in the loop, so the lint has to be a gate condition."""
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    cypress_scope(job)
+    fill(job / "01-brief.md")
+    validate_intake(job)
+    assert st.readiness(job, st.load(job), "brief") == []
+    (job / "50-applications").mkdir(exist_ok=True)
+    (job / "50-applications" / "page.css").write_text(".a{color:#ff0000}\n")
+    probs = st.readiness(job, st.load(job), "brief")
+    assert any("vault lint" in p and "#ff0000" in p for p in probs), probs
+    assert any("50-applications/page.css" in p for p in probs)
+
+
+def test_the_gate_lint_does_not_fire_on_svg_editor_chrome(job, tmp_path):
+    """CYPRESS: tessel-wordmark-v2.svg failed the lint on Inkscape namedview chrome.
+    It is non-rendering, an editor writes it unasked, and a check that fires on it
+    gets switched off inside a month."""
+    (job / "vault" / "tokens.json").write_text((filled(tmp_path / "v") / "tokens.json").read_text())
+    cypress_scope(job)
+    fill(job / "01-brief.md")
+    validate_intake(job)
+    d = job / "30-identity" / "mark"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "wordmark-v2.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg">\n'
+        '  <sodipodi:namedview\n'
+        '     id="namedview7"\n'
+        '     pagecolor="#ffffff"\n'
+        '     bordercolor="#000000"\n'
+        '     inkscape:deskcolor="#d1d1d1" />\n'
+        '  <path d="M0 0h10v10H0z" fill="#0B1B3F"/>\n'
+        '</svg>\n')
+    assert st.readiness(job, st.load(job), "brief") == [], "editor chrome is not a literal colour in the artwork"
+
+    (d / "wordmark-v3.svg").write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg">\n'
+        '  <sodipodi:namedview pagecolor="#ffffff" />\n'
+        '  <path d="M0 0h10v10H0z" fill="#ff0000"/>\n'
+        '</svg>\n')
+    probs = st.readiness(job, st.load(job), "brief")
+    assert any("#ff0000" in p for p in probs), "a real literal beside the chrome is still caught"
+    assert not any("#ffffff" in p for p in probs)
+
+
+# --------------------------------------------------------------------------- 0.3.7: the stopping rule
+
+def test_checking_stops_on_a_pass_that_found_nothing(job):
+    """Cypress ran four verification passes at handover with no rule saying when to stop."""
+    assert st.VERIFY_BUDGET["sprint"] == 3
+    assert st.main(["verify-pass", "handover", "--found", "9", "--job", str(job)]) == 0
+    with pytest.raises(SystemExit, match="found 9 thing"):
+        st.main(["verify-close", "handover", "--call", "looks fine", "--job", str(job)])
+    assert st.main(["verify-pass", "handover", "--found", "0", "--job", str(job)]) == 0
+    assert st.main(["verify-close", "handover", "--call",
+                    "two passes, the second clean, nothing found would ship wrong", "--job", str(job)]) == 0
+    log = (job / "90-decisions.md").read_text()
+    assert "VERIFICATION CLOSED on 'handover' after 2 pass(es)" in log
+    assert "Producer's call: two passes, the second clean" in log
+    v = st.load(job)["verification"]["handover"]
+    assert v["closed"]["passes"] == 2 and not st.open_verifications(st.load(job))
+
+
+def test_checking_cannot_close_before_it_has_run(job):
+    with pytest.raises(SystemExit, match="cannot be closed before it has run"):
+        st.main(["verify-close", "handover", "--call", "nothing to check", "--job", str(job)])
+
+
+def test_a_pass_beyond_the_budget_is_a_stated_decision(job):
+    for i in range(3):
+        assert st.main(["verify-pass", "handover", "--found", "1", "--job", str(job)]) == 0
+    with pytest.raises(SystemExit, match="beyond the Brand Sprint budget of 3"):
+        st.main(["verify-pass", "handover", "--found", "1", "--job", str(job)])
+    assert st.main(["verify-pass", "handover", "--found", "0", "--beyond",
+                    "the pptx build is not reproducible, so the pair must be rebuilt and re-compared",
+                    "--job", str(job)]) == 0
+    assert "Beyond budget, because: the pptx build is not reproducible" in (job / "90-decisions.md").read_text()
+    assert st.main(["verify-close", "handover", "--call", "clean on the fourth", "--job", str(job)]) == 0
+    with pytest.raises(SystemExit, match="was closed at"):
+        st.main(["verify-pass", "handover", "--found", "1", "--job", str(job)])
+
+
+def test_a_job_does_not_close_with_its_verification_open(job):
+    assert st.main(["verify-pass", "handover", "--found", "2", "--job", str(job)]) == 0
+    assert any("verification 'handover' open: 1 of 3 pass(es), last found 2"
+               in line for line in st.status_lines(job, st.load(job)))
+    with pytest.raises(SystemExit, match="Verification is still open on handover"):
+        st.main(["set-active", str(job), "no"])
+    assert st.main(["set-active", str(job), "no", "--force"]) == 0, "a job being stopped can still be closed"
+    assert st.load(job)["active"] is False

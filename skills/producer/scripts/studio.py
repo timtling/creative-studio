@@ -70,6 +70,11 @@ STAGE_DIRS = {
     "identity": "30-identity", "screens": "30-screens", "prototype": "40-prototype", "make": "50-make",
     "applications": "50-applications", "governance": "60-governance", "handover": "99-handover", "return": "99-return",
 }
+# How many full verification passes a stage's work gets before continuing becomes a
+# decision rather than a habit. Checking stops when a pass finds nothing that would
+# ship wrong; the budget is what forces the Producer to make that call out loud.
+# Cypress ran four passes at handover with no rule saying when to stop.
+VERIFY_BUDGET = {"sprint": 3, "launch-kit": 2, "product-ui": 3, "programme": 4, "commission": 2}
 DECISIONS = ["approved", "approved-with", "rework", "skipped"]
 FEEDBACK = ["in-scope", "new-request", "taste"]
 
@@ -469,6 +474,332 @@ def vault_ok(job: Path, data: dict) -> list[str]:
     return [f"vault: {e}" for e in errors[:5]] + ([f"vault: {len(errors) - 5} more errors"] if len(errors) > 5 else [])
 
 
+# --------------------------------------------------------------------------- scope audit
+
+class ScopeError(Exception):
+    """The deliverables table could not be read.
+
+    Always raised, never worked around. A parser that yields a shorter list of
+    promises than the scope contains would hide exactly what this check exists to
+    find, so failing loudly with the row it could not read is the only safe mode.
+    """
+
+
+SCOPE_HEAD = re.compile(r"^#{2,}\s*Deliverables\s*$", re.M)
+TABLE_ROW = re.compile(r"^\s*\|(.+)\|\s*$")
+RULE_ROW = re.compile(r"^\s*\|[\s:|-]+\|\s*$")
+# Deliberately over-splits. An over-split promise costs one answered line; an
+# under-split one hides a promise, which is the failure the audit exists for.
+PROMISE_SPLIT = re.compile(r",|;|\band\b|\bplus\b|\bwith\b", re.I)
+LEADING_NOISE = {"a", "an", "the", "its", "in", "one", "exports", "export", "including",
+                 "includes", "for", "of", "to", "as", "at", "then"}
+AUDIT_STATES = ("shipped", "absent-by-decision", "short", "client-blocked")
+AUDIT_FILE = "scope-audit.md"
+AUDIT_META = re.compile(r"^(filled-by|cross-read-by|scope-read):[ \t]*(.*)$", re.M)
+
+
+def _cells(line: str) -> list[str]:
+    return [c.strip() for c in line.strip().strip("|").split("|")]
+
+
+def _promises(cell: str, row: int, kind: str) -> list[str]:
+    out = []
+    for part in PROMISE_SPLIT.split(cell):
+        if ":" in part:                              # "the system, in use: mark" -> "mark"
+            part = part.split(":", 1)[1]
+        words = part.strip().strip("`*.…").split()
+        while words and words[0].lower().strip(",.`") in LEADING_NOISE:
+            words = words[1:]
+        p = " ".join(words).strip(" `*.…")
+        if p:
+            out.append(p)
+    if not out:
+        raise ScopeError(f"02-scope.md row {row}: the '{kind}' column is empty, "
+                         "so the row promises nothing that can be audited")
+    return out
+
+
+def parse_scope(job: Path) -> list[dict]:
+    """Every promise in 02-scope.md's deliverables table: one per format, one per subject.
+
+    The unit is the promise and never the row, because on Cypress four of the five
+    scope gaps sat inside a row that a row-level check passes. Twelve SVG masters
+    existed while the PNG set, the mark PDF and the Design System artifact did not.
+    `voice.md` existed without its boilerplate. Fourteen slides and a correct PDF
+    existed without the `.pptx`. And a twelve-section guidelines microsite existed,
+    internally consistent and complete against `system.md`, with voice - one of the
+    seven subjects the row bought - missing from it entirely.
+    """
+    p = job / "02-scope.md"
+    if not p.exists():
+        raise ScopeError("02-scope.md is missing")
+    m = SCOPE_HEAD.search(p.read_text())
+    if not m:
+        raise ScopeError("02-scope.md has no '## Deliverables' heading, so there is no table to audit")
+    body = re.split(r"^#{2,}\s", p.read_text()[m.end():], maxsplit=1, flags=re.M)[0]
+    lines = [ln for ln in body.splitlines() if TABLE_ROW.match(ln)]
+    if not lines:
+        raise ScopeError("02-scope.md has a '## Deliverables' heading with no table under it")
+    head = _cells(lines[0])
+    if len(head) != 3 or head[0].lower() != "deliverable":
+        raise ScopeError("02-scope.md's deliverables table needs three columns, "
+                         f"'Deliverable | Delivered as | Includes'. Found: {' | '.join(head) or '(nothing)'}")
+    out: list[dict] = []
+    seen: set[str] = set()
+    row = 0
+    for line in lines[1:]:
+        if RULE_ROW.match(line):
+            continue
+        row += 1
+        c = _cells(line)
+        if len(c) != 3:
+            raise ScopeError(f"02-scope.md deliverable row {row} has {len(c)} cells, not 3: {line.strip()[:70]}")
+        name = c[0].strip("*` ")
+        if not name:
+            raise ScopeError(f"02-scope.md deliverable row {row} has no name in the first column")
+        for kind, cell in (("format", c[1]), ("subject", c[2])):
+            for promise in _promises(cell, row, kind):
+                base = f"{row}.{kind}.{slug(promise)[:44] or 'unnamed'}"
+                key, n = base, 2
+                while key in seen:
+                    key, n = f"{base}-{n}", n + 1
+                seen.add(key)
+                out.append({"key": key, "row": row, "deliverable": name, "kind": kind, "promise": promise})
+    if not out:
+        raise ScopeError("02-scope.md's deliverables table has a header and no deliverable rows")
+    return out
+
+
+def audit_path(job: Path) -> Path:
+    return job / "gates" / AUDIT_FILE
+
+
+def parse_audit(job: Path) -> tuple[dict, dict]:
+    """(meta, {key: (state, evidence)}) read back out of gates/scope-audit.md."""
+    text = audit_path(job).read_text()
+    meta = {k: v.strip() for k, v in AUDIT_META.findall(text)}
+    rows: dict[str, tuple[str, str]] = {}
+    for line in text.splitlines():
+        if not TABLE_ROW.match(line) or RULE_ROW.match(line):
+            continue
+        c = _cells(line)
+        if len(c) != 5 or c[0].lower() == "key":
+            continue
+        rows[c[0].strip("` ")] = (c[3].strip().lower(), c[4].strip())
+    return meta, rows
+
+
+def render_audit(job: Path, d: dict, promises: list[dict], meta: dict, keep: dict) -> str:
+    name = d.get("codename") or d["client"]
+    fmts = sum(1 for p in promises if p["kind"] == "format")
+    out = [
+        f"# Scope audit: {name}",
+        "",
+        f"{len(promises)} promises across {len({p['row'] for p in promises})} bought deliverables: "
+        f"{fmts} formats and {len(promises) - fmts} subjects.",
+        "",
+        "Generated by `studio.py scope-audit` from `02-scope.md`, **one line per promise and never",
+        "one per deliverable**. Delivery fills it at the end of the making stage; the Producer",
+        "cross-reads it. `studio.py check final` will not raise the final gate until every line",
+        "has a state and every piece of evidence resolves.",
+        "",
+        "Do not hand-edit the Key, Bought or Kind columns. Re-run the command after any scope",
+        "change: states are carried over by key, and a promise the scope has just gained arrives",
+        "as `unstated` rather than as an absence nobody sees.",
+        "",
+        f"filled-by: {meta.get('filled-by') or '{{the role that audited the work, usually Delivery}}'}",
+        f"cross-read-by: {meta.get('cross-read-by') or '{{the role that checked it, which must differ}}'}",
+        f"scope-read: {now().strftime('%d %b %Y %H:%M')}",
+        "",
+        "## What the states mean",
+        "",
+        "| State | The evidence it needs |",
+        "|---|---|",
+        "| `shipped` | a job-relative path that resolves, or an `https://` artifact URL |",
+        "| `absent-by-decision` | the gate that decided it, which must carry a recorded decision |",
+        "| `short` | one line saying what is missing |",
+        "| `client-blocked` | one line saying what the client still owes |",
+        "| `unstated` | nobody has answered yet. The final gate will not raise while one remains |",
+        "",
+        "`absent-by-decision` is the state that separates a decision from a gap, and it is the one",
+        "the tool can check against Tim's own recorded words. *Complete* and *short* are about what",
+        "the studio owes; *client-blocked* is about what the client owes.",
+        "",
+        "| Key | Bought | Kind | State | Evidence |",
+        "|---|---|---|---|---|",
+    ]
+    for p in promises:
+        state, ev = keep.get(p["key"], ("unstated", ""))
+        out.append(f"| {p['key']} | {p['deliverable']} · {p['promise']} | {p['kind']} | {state} | {ev} |")
+    return "\n".join(out) + "\n"
+
+
+def audit_problems(job: Path, d: dict) -> list[str]:
+    """Why the final gate cannot raise.
+
+    Never a judgement about the quality of the work: every line here is a promise
+    nobody has answered, or a piece of evidence that does not resolve.
+    """
+    try:
+        promises = parse_scope(job)
+    except ScopeError as e:
+        return [str(e)]
+    p = audit_path(job)
+    if not p.exists():
+        return [f"gates/{AUDIT_FILE} is missing. Run `studio.py scope-audit`, have Delivery answer all "
+                f"{len(promises)} promise lines, then cross-read it as the Producer"]
+    if p.stat().st_mtime < (job / "02-scope.md").stat().st_mtime:
+        return [f"gates/{AUDIT_FILE} is older than 02-scope.md: the scope moved after the audit was written. "
+                "Re-run `studio.py scope-audit` (answered states are kept) and answer any new line"]
+    meta, rows = parse_audit(job)
+    probs = []
+    filled, cross = meta.get("filled-by", ""), meta.get("cross-read-by", "")
+    for label, who in (("filled-by", filled), ("cross-read-by", cross)):
+        if not who or MARKER.search(who):
+            probs.append(f"gates/{AUDIT_FILE}: '{label}' is not filled in")
+    if filled and cross and not MARKER.search(filled) and not MARKER.search(cross) \
+            and slug(filled) == slug(cross):
+        probs.append(f"gates/{AUDIT_FILE}: filled-by and cross-read-by are both '{filled}'. A role cannot "
+                     "cross-read its own completeness claim, which is the failure this check exists for")
+    missing = [p2["key"] for p2 in promises if p2["key"] not in rows]
+    if missing:
+        probs.append(f"gates/{AUDIT_FILE} has no line for {len(missing)} promise(s), e.g. {missing[0]}. "
+                     "Re-run `studio.py scope-audit`")
+    decided = {g for g, x in d["gates"].items() if x["status"] in ("approved", "approved-with", "skipped")}
+    bad = []
+    for p2 in promises:
+        state, ev = rows.get(p2["key"], ("unstated", ""))
+        label = f"{p2['key']} ({p2['deliverable']}: {p2['promise']})"
+        if state in ("", "unstated"):
+            bad.append(f"{label} is unstated")
+        elif state not in AUDIT_STATES:
+            bad.append(f"{label} has state '{state}', which is not one of {', '.join(AUDIT_STATES)}")
+        elif state == "shipped":
+            if not ev:
+                bad.append(f"{label} is shipped with no evidence: give a job-relative path or an https:// URL")
+            elif not ev.lower().startswith(("http://", "https://")):
+                target = ev.strip("`* ").split()[0].strip("`")
+                if not (job / target).exists():
+                    bad.append(f"{label} is shipped, and '{target}' does not exist in the job")
+        elif state == "absent-by-decision":
+            g = ev.strip("`* ").split()[0].lower().strip("`,") if ev.strip() else ""
+            if not g:
+                bad.append(f"{label} is absent-by-decision and names no gate. Name the gate that decided it")
+            elif g not in d["gates"]:
+                bad.append(f"{label} names '{g}', which is not a gate on this track")
+            elif g not in decided:
+                bad.append(f"{label} names gate '{g}', which carries no recorded decision")
+        elif not ev:
+            bad.append(f"{label} is '{state}' with no note saying what is outstanding")
+    probs += bad[:8]
+    if len(bad) > 8:
+        probs.append(f"and {len(bad) - 8} more promise line(s) unanswered or unresolved")
+    return probs
+
+
+def audit_pack_section(job: Path, d: dict) -> str:
+    """The final gate pack's scope table, rendered from the audit rather than written.
+
+    The pack template had no section that had to be filled from 02-scope.md, so
+    nothing in the document prompted the check that would have caught Cypress's
+    four scope gaps. This is that section, and it is generated.
+    """
+    try:
+        promises = parse_scope(job)
+    except ScopeError:
+        return ""
+    if not audit_path(job).exists():
+        return ""
+    _, rows = parse_audit(job)
+    by_row: dict[int, dict] = {}
+    for p in promises:
+        state = rows.get(p["key"], ("unstated", ""))[0]
+        r = by_row.setdefault(p["row"], {"name": p["deliverable"], "states": {}})
+        r["states"][state] = r["states"].get(state, 0) + 1
+    lines = ["\n## Scope\n",
+             "Written by studio.py from `gates/scope-audit.md`, one row per bought deliverable and "
+             "counted per promise. Nothing here is a report of what a role said it finished.\n",
+             "| Bought | Promises | State |", "|---|---|---|"]
+    for row in sorted(by_row):
+        r = by_row[row]
+        n = sum(r["states"].values())
+        if set(r["states"]) == {"shipped"}:
+            verdict = "**Complete**"
+        else:
+            verdict = ", ".join(f"{c} {s}" for s, c in sorted(r["states"].items()) if s != "shipped")
+            if r["states"].get("shipped"):
+                verdict = f"{r['states']['shipped']} shipped, " + verdict
+        lines.append(f"| {row}. {r['name']} | {n} | {verdict} |")
+    return "\n".join(lines) + "\n"
+
+
+def cross_read_problems(d: dict, gate: str) -> list[str]:
+    """One role checks another's completeness claim against the commissioning document.
+
+    Cypress produced three instances of the same failure in one day - the Producer's
+    gate pack written from what roles reported, the Strategist's README written from
+    the scope rather than from the file, the Builder's microsite written from
+    system.md rather than from the scope - and not one was caught by its author. The
+    rule is not "be more careful": it is that somebody else reads the claim, which is
+    cheaper because it does not require anyone to be more careful.
+
+    Exempt at the brief gate, where the Producer is the only role in the job and the
+    commissioning document is the client's own material. Intake validation already
+    holds that gate.
+    """
+    if gate == "brief":
+        return []
+    cr = (d["gates"].get(gate) or {}).get("cross_read")
+    if not cr:
+        return [f"no cross-read recorded for '{gate}'. One role checks another's completeness claim against "
+                f"the commissioning document: `studio.py cross-read {gate} --by <role> --of <role> "
+                "--against <document>`"]
+    if slug(cr.get("by", "")) == slug(cr.get("of", "")):
+        return [f"the cross-read for '{gate}' has '{cr.get('by')}' checking its own completeness claim"]
+    return []
+
+
+def vault_lint(job: Path, data: dict) -> list[str]:
+    """The vault lint, run as a gate condition rather than left to the write hook.
+
+    The PostToolUse hook reports literal colours as they are written, but it only
+    fires where the hook is in the loop. A job driven from the Claude app through the
+    device shell writes files with no hook running at all, so on those jobs the lint
+    has never run by the time a gate is raised. Checking it here costs a second and
+    is the difference between a rule and a hope.
+    """
+    if data.get("brand_source", "vault") != "vault":
+        return []
+    if not (job / "vault" / "tokens.json").exists():
+        return []
+    try:
+        mod = vault_module()
+        files = [p for p in sorted(job.rglob("*")) if p.is_file() and p.suffix.lower() in mod.LINT_EXT]
+        res = mod.lint_files(files, job / "vault")
+    except Exception as e:                                   # a half-written vault is vault_ok's problem
+        return [f"vault lint could not run: {e}"]
+    out = []
+    for f, issues in sorted(res.items())[:5]:
+        try:
+            rel = Path(f).resolve().relative_to(job.resolve())
+        except ValueError:
+            rel = Path(f)
+        line, lit, why = issues[0]
+        more = f", and {len(issues) - 1} more in this file" if len(issues) > 1 else ""
+        out.append(f"vault lint: {rel}:{line} {lit} ({why}){more}")
+    if len(res) > 5:
+        out.append(f"vault lint: {len(res) - 5} more file(s) carry literal colours")
+    return out
+
+
+def verification(d: dict, key: str) -> dict:
+    return d.setdefault("verification", {}).setdefault(key, {"passes": [], "closed": None})
+
+
+def open_verifications(d: dict) -> list[str]:
+    return [k for k, v in (d.get("verification") or {}).items() if v.get("passes") and not v.get("closed")]
+
+
 def readiness(job: Path, data: dict, gate: str) -> list[str]:
     t = TRACKS[data["track"]]
     gates = [g for g, _ in t["gates"]]
@@ -478,6 +809,8 @@ def readiness(job: Path, data: dict, gate: str) -> list[str]:
     for g in gates[: gates.index(gate)]:
         if data["gates"][g]["status"] not in ("approved", "approved-with", "skipped"):
             problems.append(f"gate '{g}' is {data['gates'][g]['status']}; it must be approved first")
+    problems += cross_read_problems(data, gate)
+    problems += vault_lint(job, data)
     stage = dict(t["gates"])[gate]
     if gate == "brief":
         problems += intake_validated(job)
@@ -501,6 +834,8 @@ def readiness(job: Path, data: dict, gate: str) -> list[str]:
         problems += human_refinement(job)
     if gate in ("system", "final", "governance"):
         problems += vault_ok(job, data)
+    if gate == "final":
+        problems += audit_problems(job, data)
     return problems
 
 
@@ -587,6 +922,106 @@ def cmd_plan(a) -> int:
     return 0 if fits else 2
 
 
+def cmd_log(a) -> int:
+    """Append a decision, timestamped from the machine clock.
+
+    The Producer must never type a time. Hand-typed timestamps drift, and on the
+    studio's first job they drifted past a midnight that had not happened yet.
+    """
+    job = job_or_exit(a)
+    line = " ".join(a.line).strip()
+    if not line:
+        sys.exit("Nothing to log.")
+    log_decision(job, line)
+    print(f"{now().strftime('%d %b %Y %H:%M')}: {line[:72]}{'...' if len(line) > 72 else ''}")
+    return 0
+
+
+def cmd_scope_audit(a) -> int:
+    job = job_or_exit(a)
+    d = load(job)
+    try:
+        promises = parse_scope(job)
+    except ScopeError as e:
+        sys.exit(f"Cannot read the scope: {e}")
+    p = audit_path(job)
+    meta, keep = parse_audit(job) if p.exists() else ({}, {})
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(render_audit(job, d, promises, meta, keep))
+    unstated = [x for x in promises if keep.get(x["key"], ("unstated", ""))[0] not in AUDIT_STATES]
+    fmts = sum(1 for x in promises if x["kind"] == "format")
+    print(f"gates/{AUDIT_FILE}: {len(promises)} promises across {len({x['row'] for x in promises})} "
+          f"deliverables ({fmts} formats, {len(promises) - fmts} subjects). "
+          f"{len(promises) - len(unstated)} answered, {len(unstated)} to go.")
+    for x in unstated[:60]:
+        print(f"  unstated  {x['key']}  {x['deliverable']} \u00b7 {x['promise']}")
+    if len(unstated) > 60:
+        print(f"  ... and {len(unstated) - 60} more")
+    return 0
+
+
+def cmd_cross_read(a) -> int:
+    job = job_or_exit(a)
+    d = load(job)
+    if a.gate not in d["gates"]:
+        sys.exit(f"No gate '{a.gate}' on this track.")
+    if slug(a.by) == slug(a.of):
+        sys.exit(f"'{a.by}' cannot cross-read its own completeness claim. The point of a cross-read is that "
+                 "somebody else reads it, because a role asking itself to catch its own blind spot is the "
+                 "thing that failed three times on Cypress.")
+    d["gates"][a.gate]["cross_read"] = {"at": iso(), "by": a.by, "of": a.of,
+                                        "against": a.against, "note": a.note}
+    save(job, d)
+    log_decision(job, f"Cross-read for gate '{a.gate}': {a.by} checked {a.of}'s completeness claim against "
+                      f"{a.against or 'the commissioning document'}." + (f" {a.note}" if a.note else ""))
+    print(f"Cross-read recorded for '{a.gate}': {a.by} checked {a.of}.")
+    return 0
+
+
+def cmd_verify_pass(a) -> int:
+    job = job_or_exit(a)
+    d = load(job)
+    v = verification(d, a.key)
+    if v.get("closed"):
+        sys.exit(f"Verification on '{a.key}' was closed at {v['closed']['at'][:16]}. Reopen it by recording "
+                 "why, not by adding a pass to a closed record.")
+    budget = VERIFY_BUDGET[d["track"]]
+    n = len(v["passes"]) + 1
+    if n > budget and not a.beyond:
+        sys.exit(f"Pass {n} is beyond the {TRACKS[d['track']]['label']} budget of {budget}. Continuing is a "
+                 f"decision rather than a habit: either close it with `studio.py verify-close {a.key} "
+                 "--call \"<why it is done>\"`, or re-run this with --beyond \"<why another pass is "
+                 "warranted>\".")
+    v["passes"].append({"at": iso(), "found": a.found, "note": a.note, "beyond": a.beyond})
+    save(job, d)
+    log_decision(job, f"Verification pass {n} of {budget} on '{a.key}': {a.found} thing(s) found that would "
+                      f"ship wrong." + (f" {a.note}" if a.note else "")
+                 + (f" Beyond budget, because: {a.beyond}" if a.beyond else ""))
+    print(f"Pass {n} of {budget} on '{a.key}': found {a.found}."
+          + ("" if a.found else " Nothing would ship wrong, so this pass can close the verification."))
+    return 0
+
+
+def cmd_verify_close(a) -> int:
+    job = job_or_exit(a)
+    d = load(job)
+    v = verification(d, a.key)
+    if not v["passes"]:
+        sys.exit(f"No verification passes recorded on '{a.key}'. Checking cannot be closed before it has run.")
+    last = v["passes"][-1]
+    if last["found"]:
+        sys.exit(f"The last pass on '{a.key}' found {last['found']} thing(s) that would ship wrong. Fix them "
+                 "and run another pass: checking stops when a pass finds nothing, not when the budget "
+                 "runs out.")
+    v["closed"] = {"at": iso(), "call": a.call, "passes": len(v["passes"])}
+    save(job, d)
+    log_decision(job, f"VERIFICATION CLOSED on '{a.key}' after {len(v['passes'])} pass(es), the last of which "
+                      f"found nothing that would ship wrong. Producer's call: {a.call}")
+    print(f"'{a.key}': verification closed after {len(v['passes'])} pass(es) of "
+          f"{VERIFY_BUDGET[d['track']]}.")
+    return 0
+
+
 def cmd_check(a) -> int:
     job = job_or_exit(a)
     d = load(job)
@@ -627,6 +1062,10 @@ def cmd_gate_raise(a) -> int:
                      "could not check, not only what it checked.\n\n"
                      + "\n".join(f"- **{w}**" for w in warns) + "\n")
             text = text.replace("\n## Trade-offs and risks", block + "\n## Trade-offs and risks", 1)
+        if a.gate == "final":
+            scope = audit_pack_section(job, d)
+            if scope:
+                text = text.replace("\n## Trade-offs and risks", scope + "\n## Trade-offs and risks", 1)
         pack.write_text(text)
     for w in warns:
         print(f"  ! {w}")
@@ -746,6 +1185,10 @@ def status_lines(job: Path, d: dict) -> list[str]:
         extra = f", rounds {x['rounds_used']}/{x['rounds_allowed']}" if x["status"] != "not-raised" else ""
         extra += f", reworks {x['reworks']}" if x["reworks"] else ""
         out.append(f"  gate {g:<10} {x['status']}{extra}")
+    for k in open_verifications(d):
+        v = d["verification"][k]
+        out.append(f"  verification '{k}' open: {len(v['passes'])} of {VERIFY_BUDGET[d['track']]} pass(es), "
+                   f"last found {v['passes'][-1]['found']}")
     open_cr = [c for c in d["change_requests"] if c["status"] == "open"]
     if open_cr:
         out.append(f"Open change requests: {', '.join(c['id'] for c in open_cr)}")
@@ -774,6 +1217,12 @@ def cmd_status(a) -> int:
 def cmd_set_active(a) -> int:
     job = Path(a.folder).expanduser().resolve()
     d = load(job)
+    if a.value == "no" and not a.force:
+        stuck = open_verifications(d)
+        if stuck:
+            sys.exit(f"Verification is still open on {', '.join(stuck)}. Close it with `studio.py verify-close "
+                     "<key> --call \"<why it is done>\"` so the record says who decided checking was "
+                     "finished, or pass --force if the job is being stopped rather than delivered.")
     d["active"] = a.value == "yes"
     save(job, d)
     log_decision(job, f"Job marked {'active' if d['active'] else 'inactive'}.")
@@ -802,6 +1251,37 @@ def main(argv=None) -> int:
     p.add_argument("--start")
     p.add_argument("--job")
     p.set_defaults(fn=cmd_plan)
+
+    p = sub.add_parser("log", help="append a decision, timestamped from the machine clock")
+    p.add_argument("line", nargs="+")
+    p.add_argument("--job")
+    p.set_defaults(fn=cmd_log)
+    p = sub.add_parser("scope-audit", help="generate gates/scope-audit.md from 02-scope.md, one line per promise")
+    p.add_argument("--job")
+    p.set_defaults(fn=cmd_scope_audit)
+
+    p = sub.add_parser("cross-read", help="record that one role checked another's completeness claim")
+    p.add_argument("gate")
+    p.add_argument("--by", required=True, help="the role doing the reading")
+    p.add_argument("--of", required=True, help="whose completeness claim it read; must differ from --by")
+    p.add_argument("--against", help="the commissioning document it was checked against, e.g. 02-scope.md")
+    p.add_argument("--note")
+    p.add_argument("--job")
+    p.set_defaults(fn=cmd_cross_read)
+
+    p = sub.add_parser("verify-pass", help="record one verification pass and what it found")
+    p.add_argument("key", help="what is being verified, e.g. handover or applications")
+    p.add_argument("--found", type=int, required=True, help="how many things it found that would ship wrong")
+    p.add_argument("--note")
+    p.add_argument("--beyond", help="why a pass beyond the track's budget is warranted")
+    p.add_argument("--job")
+    p.set_defaults(fn=cmd_verify_pass)
+
+    p = sub.add_parser("verify-close", help="the Producer's call that checking is done")
+    p.add_argument("key")
+    p.add_argument("--call", required=True, help="why it is done, in one line, for the decisions log")
+    p.add_argument("--job")
+    p.set_defaults(fn=cmd_verify_close)
 
     p = sub.add_parser("check", help="is a gate ready to raise?")
     p.add_argument("gate")
@@ -851,6 +1331,8 @@ def main(argv=None) -> int:
     p.set_defaults(fn=cmd_status)
 
     p = sub.add_parser("set-active", help="mark a job active or inactive")
+    p.add_argument("--force", action="store_true",
+                   help="close a job with verification still open, for one stopped rather than delivered")
     p.add_argument("folder")
     p.add_argument("value", choices=["yes", "no"])
     p.set_defaults(fn=cmd_set_active)

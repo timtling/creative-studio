@@ -113,3 +113,28 @@ def test_the_rule_reaches_every_role_that_could_break_it(agent, must_say):
 def test_the_direction_gate_states_the_plan():
     assert "## The 3D plan" in (ROOT / "skills" / "producer" / "assets" / "templates" / "gate-pack.md").read_text()
     assert "the 3D plan" in (ROOT / "skills" / "studio-gate" / "SKILL.md").read_text()
+
+
+def test_it_says_plainly_that_it_does_not_build_the_scene():
+    """CYPRESS: run as documented against a factory startup, blenderkit.py renders
+    Blender's default cube, and both the docstring and SKILL.md implied it builds a
+    scene. A render that looks right and answers nothing is the worst kind."""
+    src = (ROOT / "skills" / "blender-3d" / "scripts" / "blenderkit.py").read_text()
+    doc = src.split('"""')[1]
+    assert "IT DOES NOT BUILD THE SCENE" in doc
+    assert "default cube" in doc
+    assert "creates no geometry" in doc and "camera" in doc      # the line wraps in the docstring
+    assert "builds the scene, sets the view transform" not in src, "the old claim is gone"
+
+    skill = (ROOT / "skills" / "blender-3d" / "SKILL.md").read_text()
+    assert "does not build a scene" in skill and "default cube" in skill
+    assert "It does not build geometry for you" in skill, "the description says so too"
+    assert "--python build-scene.py" in skill, "and shows how to supply one"
+
+
+def test_the_skill_says_what_has_to_be_specified_before_a_render_is_evidence():
+    """The livery test's mark height was specified and its light was not, which is why
+    the geometry findings held and the lighting one had to be downgraded."""
+    skill = (ROOT / "skills" / "blender-3d" / "SKILL.md").read_text()
+    assert "has to be in the scene script and stated" in skill
+    assert "evidence rather than an illustration" in skill

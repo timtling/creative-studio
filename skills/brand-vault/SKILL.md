@@ -7,7 +7,7 @@ description: >
   Identity designer owns the vault; every other role reads from it. It covers the token structure,
   vault.py commands, the rules for referencing tokens, and working with an external brand.
 metadata:
-  version: "0.3.6"
+  version: "0.3.7"
 ---
 
 # Brand vault
@@ -52,17 +52,21 @@ vault.py contrast <job>/vault                # every text and accent pair, with 
 vault.py lint --vault <job>/vault <files>    # literal colours that bypass the vault
 ```
 
-A plugin hook runs the lint after every write to an HTML, CSS, SVG or script file inside a job, and reports literal colours back to the agent. In HTML and CSS, reference `var(--token)`. In standalone SVG files, literal fills are allowed only when they exactly match a vault colour.
+**Run the lint yourself before every gate. Do not rely on the hook.** The hook only fires where the hook is in the loop, and a job driven from the Claude app through the device shell writes every file with no hook running at all, so on those jobs the lint has never run by the time a gate is raised. `studio.py check <gate>` now runs it over the whole job and reports literal colours as readiness problems, which is the only version of this rule that holds when the hook is absent.
+
+A plugin hook also runs the lint after every write to an HTML, CSS, SVG or script file inside a job, and reports literal colours back to the agent. In HTML and CSS, reference `var(--token)`. In standalone SVG files, literal fills are allowed only when they exactly match a vault colour.
 
 The lint and the hook skip three places, because literal values there are correct rather than sloppy:
 
 | Skipped | Why |
 |---|---|
 | `vault/` and any `tokens.css` | The vault is where the values live |
-| `20-territories/` | Territory boards are made before the vault exists |
+| any `territories/` folder | Territory boards are made before the vault exists, and stay records of the direction stage after Delivery copies them into `99-handover/territories/`. Re-tokening one to satisfy a rule written afterwards would falsify the record |
 | `30-identity/exploration/` | Mark exploration is drawing, not a deliverable |
 
 Everything else in a job references tokens. A lint that cries wolf in the pre-vault stages is a lint everyone learns to ignore.
+
+**Inside an SVG, editor chrome is skipped too.** Inkscape and Sodipodi write the canvas colour, the page border and the desk colour into `<sodipodi:namedview>` whether anybody asked or not. None of it renders, none of it is the artwork, and flagging it taught everyone to ignore the lint on SVGs, which cost more than the rule was worth. The skip is narrow on purpose: only those two namespaces, and only inside their own elements, so a literal fill on a path either side of the block is still reported.
 
 **The texture rule.** The lint also reports texture — grain, noise, overprint, repeating and conic gradients, image backgrounds — declared on a rule whose selector says the block holds running text (`p`, `li`, `td`, `.body`, `.copy`, `.entry` and the like). Texture behind body text destroys the contrast the vault's other rules exist to protect. Texture on a hero, a cover or a campaign panel is the point of the expressive layer and is not flagged.
 

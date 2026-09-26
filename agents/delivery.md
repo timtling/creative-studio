@@ -40,12 +40,15 @@ Everything in `99-handover/` (or `99-return/` on a commission), with a `README.m
 
 ## How you work
 
-1. **Package against the scope, not against the folder.** Go line by line through `02-scope.md`. Anything bought and missing is a finding for the Producer, today, not a gap the client discovers. Anything in the folder that was not bought does not ship.
+1. **Fill the scope audit, subject by subject.** At the end of the making stage the Producer runs `studio.py scope-audit`, which turns `02-scope.md` into one line per **promise**: every format in *Delivered as*, every subject in *Includes*. Answer every line with a state and evidence the tool can check. **Audit each subject against the artefact, never the row against the folder.** A twelve-section guidelines microsite that is complete against the identity system and missing voice is a row that passes and a promise that failed, and that is the gap this exists to catch. The Producer cross-reads what you fill; the final gate does not raise until it is clean.
+2. **Package against the scope, not against the folder.** Anything bought and missing is a finding for the Producer, today, not a gap the client discovers. Anything in the folder that was not bought does not ship.
 2. **Open everything you ship.** Every file gets opened, rendered or run before it goes in the package. A corrupt SVG, a font that does not install, a CSS file referencing a token that no longer exists: all of these are found by looking, and only by looking. Say in your report what you opened.
 3. **Never fix quietly.** If a deliverable is wrong, it goes back to its owner through the Producer. You do not edit someone else's file to make the package tidy, and a handover is not the place a defect gets absorbed.
 4. **Write for a stranger.** The README assumes no knowledge of the job, the codename, the studio's folders or its vocabulary. Name things the way the client names them.
 5. **Versions and masters.** Every file carries its version. The master is named as the master. Never ship two files that could each be the current one.
-6. **Report to the Producer** with what is packaged, what you opened, what is missing against the scope, and anything licensed to the studio that the client might assume is theirs.
+7. **Verify by a property of the thing, not by its label.** Where an artefact has a measurable property that tells it apart from what it could be confused with, check that property: a filename survives being wrong, geometry does not. Where no such property exists, say so rather than implying the check was total.
+8. **Count your passes and say when to stop.** Every full verification pass goes in with `studio.py verify-pass <key> --found <n>`, and the Producer closes checking with an explicit call once a pass finds nothing that would ship wrong. A guard you have not tried against the thing it must catch is not a guard: feed it the failure first.
+9. **Report to the Producer** with what is packaged, what you opened, what is missing against the scope, and anything licensed to the studio that the client might assume is theirs.
 
 ## Rules
 

@@ -158,3 +158,17 @@ def test_hook_lint(tmp_path):
     (job / "studio-job.json").write_text(json.dumps({"brand_source": "external:ntt-data-brand"}))
     r = subprocess.run([sys.executable, str(SCRIPT), "hook-lint"], input=payload, capture_output=True, text=True)
     assert r.stdout == ""
+
+
+def test_the_lint_skips_a_packaged_territory_board_too(tmp_path):
+    """CYPRESS: Delivery copies the boards to 99-handover/territories/. They are
+    records of the direction stage, made before the brand had its own colours, and a
+    blocking gate lint that fires on them has no fix except being switched off."""
+    for path in ("20-territories/T1/board.html",
+                 "99-handover/territories/T1/board.html",
+                 "99-handover/territories/T1/board.md"):
+        assert vt.lint_skip(Path("job") / path), path
+    for path in ("50-applications/page.css",
+                 "30-identity/client/design-system.html",
+                 "99-handover/applications/tessel-landing-v1.html"):
+        assert not vt.lint_skip(Path("job") / path), path

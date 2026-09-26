@@ -308,10 +308,28 @@ td,th{{text-align:left;padding:6px 8px;border-bottom:1px solid {line}}}.pair{{di
 
 # --------------------------------------------------------------------------- lint
 
+# Editor chrome inside an SVG: the canvas colour, the page border, the desk colour.
+# None of it renders, none of it is the artwork, and an editor writes it whether
+# anybody asked or not. Flagging it taught everyone to ignore the lint on SVGs,
+# which cost more than the rule was worth. Narrow on purpose: only the Inkscape and
+# Sodipodi namespaces, and only inside their own elements.
+SVG_CHROME_OPEN = re.compile(r"<(?:sodipodi|inkscape):[\w-]+\b", re.I)
+SVG_CHROME_ATTR = re.compile(r"\b(?:sodipodi|inkscape):[\w-]+\s*=", re.I)
+
+
 def lint_text(text: str, suffix: str, allowed: set[str]) -> list[tuple[int, str, str]]:
     """[(line, literal, reason)] for literal colours that bypass the vault."""
     issues = []
+    in_chrome = False
     for i, line in enumerate(text.splitlines(), 1):
+        if suffix == ".svg":
+            if not in_chrome and SVG_CHROME_OPEN.search(line):
+                in_chrome = True
+            chrome = in_chrome or bool(SVG_CHROME_ATTR.search(line))
+            if in_chrome and re.search(r"/?>", line.split("<")[-1] if "<" in line else line):
+                in_chrome = False
+            if chrome:
+                continue
         for m in LITERAL_COLOUR_RE.finditer(line):
             lit = m.group(0)
             if suffix == ".svg":
@@ -372,7 +390,12 @@ def lint_skip(f: Path) -> bool:
     parts = f.parts
     if "vault" in parts or f.name == "tokens.css":
         return True
-    if "20-territories" in parts:
+    # Any territories folder, including the copy Delivery packages into 99-handover.
+    # A board is a record of what was drawn at the direction stage, before the brand
+    # had its own colours, and it stays one after it is copied. Re-tokening a board
+    # to satisfy a rule written afterwards would falsify the record, so there is no
+    # fix available and a blocking lint here would simply have to be switched off.
+    if any(x == "20-territories" or x == "territories" for x in parts):
         return True
     return any(a == "30-identity" and b == "exploration" for a, b in zip(parts, parts[1:]))
 

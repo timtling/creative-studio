@@ -7,9 +7,16 @@ Two jobs, and it is careful about the boundary between them:
     that needs nothing but the standard library, so the Producer and the tests
     can use it on any machine.
   * Inside Blender (`blender --background --python blenderkit.py -- ...`) it
-    builds the scene, sets the view transform to Standard, takes the material
-    colours from vault/build/blender.json, renders each distance and writes a
-    sidecar recording exactly what was done.
+    sets the view transform to Standard, sets the engine, samples and resolution,
+    takes the material colours from vault/build/blender.json, moves the camera to
+    each distance, renders, and writes a sidecar recording what was done.
+
+IT DOES NOT BUILD THE SCENE. It creates no geometry, no materials, no lights and no
+camera, and it never has: the caller supplies the scene, either as a .blend Blender
+opens or as a scene script run before this one. Pointed at a factory startup file it
+renders Blender's default cube, correctly exposed and in the brand's colours, which
+looks exactly like a working render and answers nothing. A scene script is preferred
+over a .blend because a .blend is not a record of how the scene was made.
 
 Colours are never typed in and never converted by eye: they come from the vault
 build, which is the only place that knows the brand's linear values.

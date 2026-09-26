@@ -8,7 +8,7 @@ description: >
   (what to change in the studio itself), and eval cases drawn from the job's own record. It does not
   apply to NTT DATA consulting engagements.
 metadata:
-  version: "0.3.3"
+  version: "0.3.7"
 ---
 
 # Studio close
@@ -63,6 +63,8 @@ Each case is one file: the situation, the input the agent would see, what a fail
 
 ## Closing
 
-Report to Tim with the three counts (decisions, corrections, role-to-role catches), the top three fixes with their cost, and how many eval cases the job produced. Then `studio.py set-active <folder> no`.
+Report to Tim with the three counts (decisions, corrections, role-to-role catches), the top three fixes with their cost, and how many eval cases the job produced.
+
+Then close the record in order: `studio.py verify-close <key> --call "<why checking is done>"` if any verification is still open, and then `studio.py set-active <folder> no`, which will refuse while a verification has passes and no closing call. **A job with no end condition on its checking is not a thorough job, it is an unfinished one**, and the call belongs to the Producer, in the log, under a name.
 
 **Do not write a case, a fix or a log line for something that did not happen.** This skill exists to make the studio honest about itself, and a flattering close is worse than none.

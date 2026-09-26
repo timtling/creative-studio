@@ -1,7 +1,7 @@
 {
   "name": "creative-studio",
-  "version": "0.3.6",
-  "description": "An independent creative studio team of agents for brand, identity, launch and product UI work, for direct clients and as a commissioning service for other teams. 0.3.3 completes the roster with the Builder and Delivery and adds the job close-out, on top of 0.3.0's four creative roles, 0.2.0's Producer, standards and brand vault, and 0.1.0's imagery layer.",
+  "version": "0.3.7",
+  "description": "An independent creative studio team of agents for brand, identity, launch and product UI work, for direct clients and as a commissioning service for other teams. 0.3.7 makes the scope auditable promise by promise and gives checking an end condition, on top of 0.3.3's complete roster and job close-out, 0.3.0's four creative roles, 0.2.0's Producer, standards and brand vault, and 0.1.0's imagery layer.",
   "author": {
     "name": "Tim Ling",
     "email": "timothy.t.ling@gmail.com"
